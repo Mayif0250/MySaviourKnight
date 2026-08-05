@@ -60,5 +60,10 @@ export const useSettingsStore = create<SettingsState & SettingsStoreActions>((se
   toggleCompactOverlay: () => {
     const nextState = !get().compactOverlay;
     get().updateSettings({ compactOverlay: nextState });
+    if (nextState) {
+      WindowService.enterOverlayMode();
+    } else {
+      WindowService.exitOverlayMode(get().alwaysOnTop);
+    }
   },
 }));

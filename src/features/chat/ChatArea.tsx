@@ -15,8 +15,8 @@ import {
   Zap,
   ArrowUp,
   FileText,
-  Lightbulb,
-  Briefcase,
+  Search,
+  CheckCircle2,
 } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore';
 import { useConversationStore } from '../../store/conversationStore';
@@ -160,7 +160,7 @@ export const ChatArea: React.FC = () => {
             <select
               value={activeModel}
               onChange={(e) => setActiveModel(e.target.value)}
-              className="appearance-none bg-gray-100 dark:bg-gray-800/70 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-xs py-1 pl-2.5 pr-7 rounded-lg outline-none cursor-pointer transition-colors border border-transparent focus:border-emerald-500"
+              className="appearance-none bg-gray-100 dark:bg-gray-800/70 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-xs py-1 pl-2.5 pr-7 rounded-lg outline-none cursor-pointer transition-colors border border-transparent focus:border-blue-500"
             >
               {availableModels.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -178,7 +178,7 @@ export const ChatArea: React.FC = () => {
             title="Toggle Inspector (Ctrl+I)"
             className={`p-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
               contextPanelOpen
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -191,54 +191,79 @@ export const ChatArea: React.FC = () => {
       {/* Main Scrollable Canvas */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-6">
         {!activeConv || activeConv.messages.length === 0 ? (
-          /* Sleek Dark Hero Screen Inspired by User Reference */
-          <div className="max-w-3xl mx-auto py-16 flex flex-col items-start text-left space-y-8 animate-in fade-in duration-300 select-none">
+          /* MSK Knight AI Hero Screen */
+          <div className="max-w-3xl mx-auto py-12 flex flex-col items-start text-left space-y-8 animate-in fade-in duration-300 select-none">
             
-            {/* Big Hero Greeting */}
-            <div className="space-y-1">
-              <h1 className="text-4xl font-normal text-gray-900 dark:text-gray-100 tracking-tight">
-                Hey! Developer
-              </h1>
-              <p className="text-4xl font-normal text-gray-900 dark:text-gray-100 tracking-tight">
-                What can I help with?
-              </p>
+            {/* Hero Branding Header */}
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
+                <Shield className="w-7 h-7" />
+              </div>
+              <div>
+                <span className="text-xs font-semibold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
+                  My Saviour Knight • MSK
+                </span>
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                  Your Personal AI Companion
+                </h1>
+              </div>
             </div>
 
-            {/* Category Cards Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full pt-2">
+            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xl leading-relaxed">
+              How can MSK assist your software engineering, system architecture, research, or daily workflow today?
+            </p>
+
+            {/* Relevant MSK Prompt Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full pt-2">
               <button
-                onClick={() => handleSendMessage('Help me design a presentation and system architecture diagram for my desktop AI app.')}
-                className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-teal-500/40 text-left transition-all group backdrop-blur-md"
+                onClick={() => handleSendMessage('Audit my TypeScript code for security vulnerabilities, edge cases, and performance bottlenecks')}
+                className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-blue-500/40 text-left transition-all group backdrop-blur-md"
               >
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 text-xs font-medium mb-3">
-                  Content Help
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-semibold mb-2.5">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Code Guard & Audit</span>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 leading-normal">
-                  Help me create a presentation & architecture docs
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  Audit code security, catch edge-case bugs, & refactor legacy TypeScript functions.
                 </p>
               </button>
 
               <button
-                onClick={() => handleSendMessage('Give me creative ideas to optimize React 19 state and streaming performance.')}
-                className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-pink-500/40 text-left transition-all group backdrop-blur-md"
+                onClick={() => handleSendMessage('Design a clean modular software architecture and data model for a Tauri v2 + React desktop application')}
+                className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-indigo-500/40 text-left transition-all group backdrop-blur-md"
               >
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20 text-xs font-medium mb-3">
-                  Suggestions
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-xs font-semibold mb-2.5">
+                  <Code2 className="w-3.5 h-3.5" />
+                  <span>Architecture Blueprint</span>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 leading-normal">
-                  Help me with ideas and refactoring strategies
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  Design scalable system architecture, state management & database models.
                 </p>
               </button>
 
               <button
-                onClick={() => handleSendMessage('Help me write a professional job application cover letter and resume summary.')}
+                onClick={() => handleSendMessage('Explain complex technical algorithms, AI models, or scientific papers clearly with code examples')}
+                className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-violet-500/40 text-left transition-all group backdrop-blur-md"
+              >
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 text-xs font-semibold mb-2.5">
+                  <Terminal className="w-3.5 h-3.5" />
+                  <span>Tech & Paper Research</span>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  Summarize complex technical documentation, APIs & algorithmic models.
+                </p>
+              </button>
+
+              <button
+                onClick={() => handleSendMessage('Write production-ready React 19 components with custom hooks, Tailwind CSS, and strict typing')}
                 className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-emerald-500/40 text-left transition-all group backdrop-blur-md"
               >
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-medium mb-3">
-                  Job Application
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-semibold mb-2.5">
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Full-Stack Development</span>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 leading-normal">
-                  Help me apply for senior software roles
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  Write production-ready React 19 UI components with clean Tailwind styling.
                 </p>
               </button>
             </div>
@@ -258,19 +283,27 @@ export const ChatArea: React.FC = () => {
         )}
       </div>
 
-      {/* Floating Dark Input Card Matching Screenshot */}
+      {/* Floating Dark Input Card */}
       <div className="p-4 sm:px-8 bg-gradient-to-t from-white via-white dark:from-[#0c0d10] dark:via-[#0c0d10] to-transparent">
-        <div className="max-w-3xl mx-auto bg-gray-50/90 dark:bg-[#14171f]/90 border border-gray-200 dark:border-gray-800 focus-within:border-teal-500/60 rounded-2xl shadow-xl transition-all p-4 space-y-3 backdrop-blur-md">
+        <div className="max-w-3xl mx-auto bg-gray-50/90 dark:bg-[#14171f]/90 border border-gray-200 dark:border-gray-800 focus-within:border-blue-500/60 rounded-2xl shadow-xl transition-all p-4 space-y-3 backdrop-blur-md">
           
           {/* Sparkles Icon Header */}
-          <div className="flex items-center gap-2 text-gray-400">
-            <Sparkles className="w-4 h-4 text-gray-300 dark:text-gray-400" />
+          <div className="flex items-center justify-between text-gray-400">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-500" />
+              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                MSK Knight Intelligence
+              </span>
+            </div>
+            <span className="text-[11px] font-mono text-gray-400 px-2 py-0.5 rounded bg-gray-200/50 dark:bg-gray-800/50">
+              {activeModel}
+            </span>
           </div>
 
           {/* Text Input */}
           <textarea
             rows={2}
-            placeholder="Ask me anything......"
+            placeholder="Ask Knight AI anything... (Enter to send, Shift+Enter for new line)"
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -279,18 +312,18 @@ export const ChatArea: React.FC = () => {
 
           {/* Bottom Toolbar */}
           <div className="flex items-center justify-between pt-2 border-t border-gray-200/40 dark:border-gray-800/40">
-            {/* Attach file Pill Badge */}
+            {/* Attach file & Context Badges */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-200/50 dark:bg-gray-800/60 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium transition-colors"
               >
                 <Paperclip className="w-3.5 h-3.5" />
-                <span>Attach file</span>
+                <span>Attach Context</span>
               </button>
             </div>
 
-            {/* Submit Arrow Button matching screenshot */}
+            {/* Submit Button */}
             <div>
               {isStreaming ? (
                 <button
@@ -305,7 +338,7 @@ export const ChatArea: React.FC = () => {
                   type="button"
                   onClick={() => handleSendMessage()}
                   disabled={!inputPrompt.trim()}
-                  className="w-9 h-9 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-30 text-gray-950 font-bold flex items-center justify-center shadow-md shadow-teal-500/20 transition-all hover:scale-105"
+                  className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white font-bold flex items-center justify-center shadow-md shadow-blue-500/20 transition-all hover:scale-105"
                 >
                   <ArrowUp className="w-5 h-5 stroke-[2.5]" />
                 </button>
