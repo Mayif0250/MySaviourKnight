@@ -50,6 +50,21 @@
   -webkit-app-region: no-drag;
 }
 
+/* Dark/Light Subtle Grid Background Texture */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(229, 231, 235, 0.4) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(229, 231, 235, 0.4) 1px, transparent 1px);
+}
+
+.dark .bg-grid-pattern {
+  background-size: 36px 36px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
 /* Markdown styling overrides */
 .prose-custom p {
   margin-top: 0.5rem;

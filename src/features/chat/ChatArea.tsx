@@ -8,12 +8,15 @@ import {
   Image as ImageIcon,
   ChevronDown,
   Layers,
-  Trash2,
   Code2,
   Cpu,
   Terminal,
   Shield,
   Zap,
+  ArrowUp,
+  FileText,
+  Lightbulb,
+  Briefcase,
 } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore';
 import { useConversationStore } from '../../store/conversationStore';
@@ -36,7 +39,6 @@ export const ChatArea: React.FC = () => {
   } = useChatStore();
 
   const {
-    conversations,
     createConversation,
     addMessageToConversation,
     updateLastAssistantMessage,
@@ -145,9 +147,9 @@ export const ChatArea: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-2.5rem)] bg-white dark:bg-gray-900 transition-colors select-text">
+    <div className="flex-1 flex flex-col h-[calc(100vh-2.5rem)] bg-white dark:bg-[#0c0d10] bg-grid-pattern transition-colors select-text">
       {/* Top Main Chat Header */}
-      <div className="h-12 px-6 border-b border-gray-200/80 dark:border-gray-800/80 flex items-center justify-between bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-20">
+      <div className="h-12 px-6 border-b border-gray-200/80 dark:border-gray-800/60 flex items-center justify-between bg-white/70 dark:bg-[#0c0d10]/70 backdrop-blur-md z-20">
         <div className="flex items-center gap-3">
           <h2 className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate max-w-md">
             {activeConv ? activeConv.title : 'New Conversation'}
@@ -158,7 +160,7 @@ export const ChatArea: React.FC = () => {
             <select
               value={activeModel}
               onChange={(e) => setActiveModel(e.target.value)}
-              className="appearance-none bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-xs py-1 pl-2.5 pr-7 rounded-lg outline-none cursor-pointer transition-colors border border-transparent focus:border-blue-500"
+              className="appearance-none bg-gray-100 dark:bg-gray-800/70 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-xs py-1 pl-2.5 pr-7 rounded-lg outline-none cursor-pointer transition-colors border border-transparent focus:border-emerald-500"
             >
               {availableModels.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -176,7 +178,7 @@ export const ChatArea: React.FC = () => {
             title="Toggle Inspector (Ctrl+I)"
             className={`p-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
               contextPanelOpen
-                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -189,72 +191,54 @@ export const ChatArea: React.FC = () => {
       {/* Main Scrollable Canvas */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-6">
         {!activeConv || activeConv.messages.length === 0 ? (
-          /* Empty State Hero Screen */
-          <div className="max-w-2xl mx-auto py-12 flex flex-col items-center text-center space-y-8 animate-in fade-in duration-300 select-none">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
-              <Shield className="w-9 h-9" />
-            </div>
-
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                My Saviour Knight
+          /* Sleek Dark Hero Screen Inspired by User Reference */
+          <div className="max-w-3xl mx-auto py-16 flex flex-col items-start text-left space-y-8 animate-in fade-in duration-300 select-none">
+            
+            {/* Big Hero Greeting */}
+            <div className="space-y-1">
+              <h1 className="text-4xl font-normal text-gray-900 dark:text-gray-100 tracking-tight">
+                Hey! Developer
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md leading-relaxed">
-                Your personal AI companion for rapid software architecture, code generation, technical research, and system engineering.
+              <p className="text-4xl font-normal text-gray-900 dark:text-gray-100 tracking-tight">
+                What can I help with?
               </p>
             </div>
 
-            {/* Quick Starter Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full pt-4">
+            {/* Category Cards Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full pt-2">
               <button
-                onClick={() => handleSendMessage('Explain clean modern software architecture for Tauri + React desktop apps')}
-                className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200/80 dark:border-gray-800 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 text-left transition-all group"
+                onClick={() => handleSendMessage('Help me design a presentation and system architecture diagram for my desktop AI app.')}
+                className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-teal-500/40 text-left transition-all group backdrop-blur-md"
               >
-                <div className="flex items-center gap-2 mb-1.5 text-blue-600 dark:text-blue-400 font-semibold text-xs">
-                  <Code2 className="w-4 h-4" />
-                  <span>Software Architecture</span>
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 text-xs font-medium mb-3">
+                  Content Help
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-300 leading-normal">
-                  Explain clean modern architecture patterns for desktop AI apps.
+                <p className="text-xs text-gray-600 dark:text-gray-400 leading-normal">
+                  Help me create a presentation & architecture docs
                 </p>
               </button>
 
               <button
-                onClick={() => handleSendMessage('Write a reusable React custom hook for global keyboard shortcuts')}
-                className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200/80 dark:border-gray-800 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 text-left transition-all group"
+                onClick={() => handleSendMessage('Give me creative ideas to optimize React 19 state and streaming performance.')}
+                className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-pink-500/40 text-left transition-all group backdrop-blur-md"
               >
-                <div className="flex items-center gap-2 mb-1.5 text-indigo-600 dark:text-indigo-400 font-semibold text-xs">
-                  <Terminal className="w-4 h-4" />
-                  <span>TypeScript & React</span>
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20 text-xs font-medium mb-3">
+                  Suggestions
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-300 leading-normal">
-                  Generate a custom hook for managing keyboard shortcuts.
+                <p className="text-xs text-gray-600 dark:text-gray-400 leading-normal">
+                  Help me with ideas and refactoring strategies
                 </p>
               </button>
 
               <button
-                onClick={() => handleSendMessage('How do I optimize Zustand state management in React 19?')}
-                className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200/80 dark:border-gray-800 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 text-left transition-all group"
+                onClick={() => handleSendMessage('Help me write a professional job application cover letter and resume summary.')}
+                className="p-4 rounded-2xl bg-gray-50/80 dark:bg-[#13151b]/80 border border-gray-200/80 dark:border-gray-800/80 hover:border-emerald-500/40 text-left transition-all group backdrop-blur-md"
               >
-                <div className="flex items-center gap-2 mb-1.5 text-violet-600 dark:text-violet-400 font-semibold text-xs">
-                  <Zap className="w-4 h-4" />
-                  <span>State Optimization</span>
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-medium mb-3">
+                  Job Application
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-300 leading-normal">
-                  Optimize Zustand store performance and selectors.
-                </p>
-              </button>
-
-              <button
-                onClick={() => handleSendMessage('Refactor this code to follow SOLID principles and clean code practices')}
-                className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200/80 dark:border-gray-800 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 text-left transition-all group"
-              >
-                <div className="flex items-center gap-2 mb-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-                  <Cpu className="w-4 h-4" />
-                  <span>Code Refactoring</span>
-                </div>
-                <p className="text-xs text-gray-600 dark:text-gray-300 leading-normal">
-                  Refactor existing code to adhere to SOLID software design.
+                <p className="text-xs text-gray-600 dark:text-gray-400 leading-normal">
+                  Help me apply for senior software roles
                 </p>
               </button>
             </div>
@@ -274,70 +258,56 @@ export const ChatArea: React.FC = () => {
         )}
       </div>
 
-      {/* Floating Bottom Input Bar */}
-      <div className="p-4 sm:px-8 bg-gradient-to-t from-white via-white dark:from-gray-900 dark:via-gray-900 to-transparent">
-        <div className="max-w-4xl mx-auto bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 focus-within:border-blue-500/60 rounded-2xl shadow-lg transition-all p-3 space-y-2">
-          {/* Text Area */}
+      {/* Floating Dark Input Card Matching Screenshot */}
+      <div className="p-4 sm:px-8 bg-gradient-to-t from-white via-white dark:from-[#0c0d10] dark:via-[#0c0d10] to-transparent">
+        <div className="max-w-3xl mx-auto bg-gray-50/90 dark:bg-[#14171f]/90 border border-gray-200 dark:border-gray-800 focus-within:border-teal-500/60 rounded-2xl shadow-xl transition-all p-4 space-y-3 backdrop-blur-md">
+          
+          {/* Sparkles Icon Header */}
+          <div className="flex items-center gap-2 text-gray-400">
+            <Sparkles className="w-4 h-4 text-gray-300 dark:text-gray-400" />
+          </div>
+
+          {/* Text Input */}
           <textarea
             rows={2}
-            placeholder="Ask MSK anything... (Enter to send, Shift+Enter for new line)"
+            placeholder="Ask me anything......"
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full bg-transparent border-none outline-none resize-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 leading-relaxed font-sans"
+            className="w-full bg-transparent border-none outline-none resize-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 leading-relaxed font-sans"
           />
 
-          {/* Action Toolbar */}
-          <div className="flex items-center justify-between pt-1 border-t border-gray-200/50 dark:border-gray-800/50">
-            {/* Left Attachments & Indicators */}
-            <div className="flex items-center gap-2 text-gray-400">
+          {/* Bottom Toolbar */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-200/40 dark:border-gray-800/40">
+            {/* Attach file Pill Badge */}
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                title="Attach Context File (Coming Soon)"
-                className="p-1.5 rounded-lg hover:bg-gray-200/60 dark:hover:bg-gray-800/60 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-200/50 dark:bg-gray-800/60 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium transition-colors"
               >
-                <Paperclip className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                title="Attach Image / Vision (Coming Soon)"
-                className="p-1.5 rounded-lg hover:bg-gray-200/60 dark:hover:bg-gray-800/60 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-              >
-                <ImageIcon className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                title="Voice Input (Coming Soon)"
-                className="p-1.5 rounded-lg hover:bg-gray-200/60 dark:hover:bg-gray-800/60 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-              >
-                <Mic className="w-4 h-4" />
+                <Paperclip className="w-3.5 h-3.5" />
+                <span>Attach file</span>
               </button>
             </div>
 
-            {/* Right Submit / Stop Button */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-gray-400 font-mono hidden sm:inline">
-                {activeModel}
-              </span>
-
+            {/* Submit Arrow Button matching screenshot */}
+            <div>
               {isStreaming ? (
                 <button
                   type="button"
                   onClick={handleStopStreaming}
-                  className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-medium text-xs flex items-center gap-1.5 shadow-md shadow-red-500/20 transition-all"
+                  className="w-9 h-9 rounded-xl bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-md transition-all"
                 >
-                  <Square className="w-3.5 h-3.5" />
-                  <span>Stop</span>
+                  <Square className="w-4 h-4" />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => handleSendMessage()}
                   disabled={!inputPrompt.trim()}
-                  className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-medium text-xs flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all"
+                  className="w-9 h-9 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-30 text-gray-950 font-bold flex items-center justify-center shadow-md shadow-teal-500/20 transition-all hover:scale-105"
                 >
-                  <span>Send</span>
-                  <Send className="w-3.5 h-3.5" />
+                  <ArrowUp className="w-5 h-5 stroke-[2.5]" />
                 </button>
               )}
             </div>
