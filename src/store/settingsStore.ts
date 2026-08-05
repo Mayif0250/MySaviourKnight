@@ -1,127 +1,64 @@
 import { create } from 'zustand';
-import { StorageManager } from '../services/storage/StorageManager';
-import { ProviderConfig } from '../types/ai';
+import { SettingsState, DEFAULT_SYSTEM_PROMPT } from '../shared/types/settings';
+import { StorageService } from '../services/storage/StorageService';
+import { WindowService } from '../services/window/WindowService';
 
-export type ThemeMode = 'light' | 'dark' | 'system';
-
-export interface SettingsState {
-  theme: ThemeMode;
-  primaryColor: string;
-  activeProviderId: string;
-  activeModelId: string;
-  providers: Record<string, ProviderConfig>;
-  sidebarCollapsed: boolean;
-  contextPanelOpen: boolean;
-  commandPaletteOpen: boolean;
-  settingsModalOpen: boolean;
-  aboutModalOpen: boolean;
-  systemPrompt: string;
-
-  setTheme: (theme: ThemeMode) => void;
-  setPrimaryColor: (color: string) => void;
-  setActiveProvider: (providerId: string) => void;
-  setActiveModel: (modelId: string) => void;
-  setProviderConfig: (providerId: string, config: Partial<ProviderConfig>) => void;
-  toggleSidebar: () => void;
-  setSidebarCollapsed: (collapsed: boolean) => void;
-  toggleContextPanel: () => void;
-  setContextPanelOpen: (open: boolean) => void;
-  setCommandPaletteOpen: (open: boolean) => void;
-  setSettingsModalOpen: (open: boolean) => void;
-  setAboutModalOpen: (open: boolean) => void;
-  setSystemPrompt: (prompt: string) => void;
+interface SettingsStoreActions {
+  updateSettings: (newSettings: Partial<SettingsState>) => void;
+  setOpenaiApiKey: (key: string) => void;
+  setActiveModel: (model: string) => void;
+  setActiveProvider: (provider: string) => void;
+  toggleAlwaysOnTop: () => void;
+  toggleCompactOverlay: () => void;
 }
 
-const DEFAULT_PROVIDERS: Record<string, ProviderConfig> = {
-  mock: {
-    enabled: true,
-  },
-  openai: {
-    enabled: true,
-    apiKey: '',
-    baseUrl: 'https://api.openai.com/v1',
-  },
+const savedSettings = StorageService.loadSettings();
+
+const initialSettings: SettingsState = {
+  theme: savedSettings.theme || 'system',
+  activeProvider: savedSettings.activeProvider || 'openai',
+  activeModel: savedSettings.activeModel || 'gpt-4o',
+  openaiApiKey: savedSettings.openaiApiKey || '',
+  openaiBaseUrl: savedSettings.openaiBaseUrl || 'https://api.openai.com/v1',
+  systemPrompt: savedSettings.systemPrompt || DEFAULT_SYSTEM_PROMPT,
+  temperature: savedSettings.temperature ?? 0.7,
+  autoScroll: savedSettings.autoScroll ?? true,
+  enterToSubmit: savedSettings.enterToSubmit ?? true,
+  compactOverlay: savedSettings.compactOverlay ?? false,
+  alwaysOnTop: savedSettings.alwaysOnTop ?? false,
+  sidebarCollapsed: savedSettings.sidebarCollapsed ?? false,
+  contextPanelOpen: savedSettings.contextPanelOpen ?? false,
+  activeRightPanelTab: savedSettings.activeRightPanelTab || 'context',
 };
 
-export const useSettingsStore = create<SettingsState>((set, get) => {
-  const initialTheme = StorageManager.getItem<ThemeMode>('theme', 'dark');
-  const initialProviders = StorageManager.getItem<Record<string, ProviderConfig>>('providers', DEFAULT_PROVIDERS);
-  const initialModel = StorageManager.getItem<string>('activeModelId', 'msk-knight-1');
-  const initialProvider = StorageManager.getItem<string>('activeProviderId', 'mock');
-  const initialSystemPrompt = StorageManager.getItem<string>(
-    'systemPrompt',
-    'You are MSK (My Saviour Knight), an elite, helpful, and highly intelligent AI companion.'
-  );
+export const useSettingsStore = create<SettingsState & SettingsStoreActions>((set, get) => ({
+  ...initialSettings,
 
-  return {
-    theme: initialTheme,
-    primaryColor: '#2563EB',
-    activeProviderId: initialProvider,
-    activeModelId: initialModel,
-    providers: initialProviders,
-    sidebarCollapsed: false,
-    contextPanelOpen: false,
-    commandPaletteOpen: false,
-    settingsModalOpen: false,
-    aboutModalOpen: false,
-    systemPrompt: initialSystemPrompt,
+  updateSettings: (newSettings) => {
+    set(newSettings);
+    StorageService.saveSettings(newSettings);
+  },
 
-    setTheme: (theme) => {
-      StorageManager.setItem('theme', theme);
-      set({ theme });
+  setOpenaiApiKey: (key: string) => {
+    get().updateSettings({ openaiApiKey: key });
+  },
 
-      const root = document.documentElement;
-      if (theme === 'dark') {
-        root.classList.add('dark');
-      } else if (theme === 'light') {
-        root.classList.remove('dark');
-      } else {
-        const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (isSystemDark) root.classList.add('dark');
-        else root.classList.remove('dark');
-      }
-    },
+  setActiveModel: (model: string) => {
+    get().updateSettings({ activeModel: model });
+  },
 
-    setPrimaryColor: (color) => {
-      set({ primaryColor: color });
-    },
+  setActiveProvider: (provider: string) => {
+    get().updateSettings({ activeProvider: provider });
+  },
 
-    setActiveProvider: (providerId) => {
-      StorageManager.setItem('activeProviderId', providerId);
-      set({ activeProviderId: providerId });
-    },
+  toggleAlwaysOnTop: () => {
+    const nextState = !get().alwaysOnTop;
+    get().updateSettings({ alwaysOnTop: nextState });
+    WindowService.setAlwaysOnTop(nextState);
+  },
 
-    setActiveModel: (modelId) => {
-      StorageManager.setItem('activeModelId', modelId);
-      set({ activeModelId: modelId });
-    },
-
-    setProviderConfig: (providerId, config) => {
-      const current = get().providers;
-      const updated = {
-        ...current,
-        [providerId]: {
-          ...(current[providerId] || { enabled: true }),
-          ...config,
-        },
-      };
-      StorageManager.setItem('providers', updated);
-      set({ providers: updated });
-    },
-
-    toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-    setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
-
-    toggleContextPanel: () => set((state) => ({ contextPanelOpen: !state.contextPanelOpen })),
-    setContextPanelOpen: (open) => set({ contextPanelOpen: open }),
-
-    setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
-    setSettingsModalOpen: (open) => set({ settingsModalOpen: open }),
-    setAboutModalOpen: (open) => set({ aboutModalOpen: open }),
-
-    setSystemPrompt: (prompt) => {
-      StorageManager.setItem('systemPrompt', prompt);
-      set({ systemPrompt: prompt });
-    },
-  };
-});
+  toggleCompactOverlay: () => {
+    const nextState = !get().compactOverlay;
+    get().updateSettings({ compactOverlay: nextState });
+  },
+}));

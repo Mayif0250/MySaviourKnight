@@ -1,333 +1,370 @@
 import React, { useState } from 'react';
-import { useSettingsStore, ThemeMode } from '../../store/settingsStore';
-import { Logo } from '../../components/common/Logo';
 import {
   X,
-  Sliders,
+  Settings,
   Key,
+  Palette,
   Keyboard,
   Info,
+  Sliders,
+  Check,
+  Eye,
+  EyeOff,
   Sun,
   Moon,
   Monitor,
-  Check,
-  Cpu,
-  Sparkles,
-  Zap,
+  Shield,
+  ExternalLink,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { useUIStore } from '../../store/uiStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import { useThemeStore } from '../../store/themeStore';
+import { useProviderStore } from '../../store/providerStore';
+import { aiService } from '../../services/ai/AIService';
+import { NotificationService } from '../../services/notification/NotificationService';
 
 export const SettingsModal: React.FC = () => {
+  const { settingsModalOpen, setSettingsModalOpen, activeSettingsTab, setActiveSettingsTab } =
+    useUIStore();
   const {
-    settingsModalOpen,
-    setSettingsModalOpen,
-    theme,
-    setTheme,
-    providers,
-    setProviderConfig,
-    activeProviderId,
-    setActiveProvider,
+    openaiApiKey,
+    setOpenaiApiKey,
+    openaiBaseUrl,
+    activeModel,
+    setActiveModel,
+    systemPrompt,
+    updateSettings,
+    autoScroll,
+    enterToSubmit,
+    alwaysOnTop,
+    toggleAlwaysOnTop,
   } = useSettingsStore();
+  const { theme, setTheme } = useThemeStore();
+  const { providers, activeProviderId, setActiveProviderId } = useProviderStore();
 
-  const [activeTab, setActiveTab] = useState<'appearance' | 'providers' | 'shortcuts' | 'about'>('appearance');
-
-  const [openAiKey, setOpenAiKey] = useState(providers.openai?.apiKey || '');
-  const [openAiUrl, setOpenAiUrl] = useState(providers.openai?.baseUrl || 'https://api.openai.com/v1');
+  const [showKey, setShowKey] = useState(false);
+  const [validating, setValidating] = useState(false);
 
   if (!settingsModalOpen) return null;
 
-  const handleSaveProviders = () => {
-    setProviderConfig('openai', {
-      apiKey: openAiKey,
-      baseUrl: openAiUrl,
-    });
-    toast.success('AI Provider settings saved successfully');
+  const handleTestKey = async () => {
+    if (!openaiApiKey) {
+      NotificationService.error('API Key is empty');
+      return;
+    }
+    setValidating(true);
+    try {
+      const isValid = await aiService.validateKey('openai', { apiKey: openaiApiKey, baseUrl: openaiBaseUrl });
+      if (isValid) {
+        NotificationService.success('API Key validated successfully!', 'Connected to OpenAI endpoint');
+      } else {
+        NotificationService.error('Validation failed', 'Check your API Key or network connection');
+      }
+    } catch (err: any) {
+      NotificationService.error('Validation error', err.message);
+    } finally {
+      setValidating(false);
+    }
   };
 
+  const tabs = [
+    { id: 'general', label: 'General', icon: Sliders },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'providers', label: 'AI Providers & Models', icon: Key },
+    { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
+    { id: 'about', label: 'About MSK', icon: Info },
+  ] as const;
+
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.15 }}
-          className="w-full max-w-2xl bg-white dark:bg-background-cardDark border border-border-light dark:border-border-dark rounded-2xl shadow-float overflow-hidden flex flex-col max-h-[85vh]"
-        >
-          {/* Header */}
-          <div className="h-14 px-6 border-b border-border-light dark:border-border-dark flex items-center justify-between">
-            <h3 className="font-bold text-base text-text-primaryLight dark:text-text-primaryDark">
-              Settings
-            </h3>
-            <button
-              onClick={() => setSettingsModalOpen(false)}
-              className="p-1 rounded-lg text-text-secondaryLight dark:text-text-secondaryDark hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <X size={18} />
-            </button>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150 select-none">
+      <div className="w-full max-w-3xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col h-[75vh]">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Settings className="w-5 h-5 text-blue-500" />
+            <h2 className="font-bold text-base text-gray-900 dark:text-gray-100">
+              MSK Preferences
+            </h2>
+          </div>
+          <button
+            onClick={() => setSettingsModalOpen(false)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Settings Body with Side Navigation */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Side Tabs */}
+          <div className="w-56 bg-gray-50/80 dark:bg-gray-950/80 border-r border-gray-200/80 dark:border-gray-800/80 p-3 space-y-1">
+            {tabs.map((t) => {
+              const Icon = t.icon;
+              const isActive = activeSettingsTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveSettingsTab(t.id)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 font-semibold'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/60 dark:hover:bg-gray-800/60'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Settings Body with Tabs */}
-          <div className="flex flex-1 min-h-[380px] overflow-hidden">
-            {/* Tab Sidebar */}
-            <div className="w-48 border-r border-border-light dark:border-border-dark p-2 space-y-1 bg-gray-50/50 dark:bg-slate-900/30">
-              <button
-                onClick={() => setActiveTab('appearance')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                  activeTab === 'appearance'
-                    ? 'bg-blue-100/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-semibold'
-                    : 'text-text-primaryLight dark:text-text-primaryDark hover:bg-gray-200/60 dark:hover:bg-gray-800/60'
-                }`}
-              >
-                <Sliders size={15} />
-                <span>Appearance</span>
-              </button>
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {activeSettingsTab === 'general' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                    System Prompt
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    Default system persona instructions sent to the AI engine on new conversations.
+                  </p>
+                  <textarea
+                    rows={4}
+                    value={systemPrompt}
+                    onChange={(e) => updateSettings({ systemPrompt: e.target.value })}
+                    className="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 text-xs text-gray-800 dark:text-gray-200 outline-none focus:border-blue-500 font-mono leading-relaxed"
+                  />
+                </div>
 
-              <button
-                onClick={() => setActiveTab('providers')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                  activeTab === 'providers'
-                    ? 'bg-blue-100/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-semibold'
-                    : 'text-text-primaryLight dark:text-text-primaryDark hover:bg-gray-200/60 dark:hover:bg-gray-800/60'
-                }`}
-              >
-                <Key size={15} />
-                <span>AI Providers</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('shortcuts')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                  activeTab === 'shortcuts'
-                    ? 'bg-blue-100/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-semibold'
-                    : 'text-text-primaryLight dark:text-text-primaryDark hover:bg-gray-200/60 dark:hover:bg-gray-800/60'
-                }`}
-              >
-                <Keyboard size={15} />
-                <span>Shortcuts</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('about')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                  activeTab === 'about'
-                    ? 'bg-blue-100/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-semibold'
-                    : 'text-text-primaryLight dark:text-text-primaryDark hover:bg-gray-200/60 dark:hover:bg-gray-800/60'
-                }`}
-              >
-                <Info size={15} />
-                <span>About MSK</span>
-              </button>
-            </div>
-
-            {/* Tab Contents */}
-            <div className="flex-1 p-6 overflow-y-auto">
-              {activeTab === 'appearance' && (
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <label className="text-xs font-semibold text-text-primaryLight dark:text-text-primaryDark">
-                      Theme Mode
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <button
-                        onClick={() => setTheme('light')}
-                        className={`p-3 rounded-2xl border flex flex-col items-center gap-2 text-xs font-medium transition-all ${
-                          theme === 'light'
-                            ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400'
-                            : 'border-border-light dark:border-border-dark text-text-secondaryLight dark:text-text-secondaryDark hover:border-gray-400'
-                        }`}
-                      >
-                        <Sun size={18} />
-                        <span>Light</span>
-                      </button>
-
-                      <button
-                        onClick={() => setTheme('dark')}
-                        className={`p-3 rounded-2xl border flex flex-col items-center gap-2 text-xs font-medium transition-all ${
-                          theme === 'dark'
-                            ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400'
-                            : 'border-border-light dark:border-border-dark text-text-secondaryLight dark:text-text-secondaryDark hover:border-gray-400'
-                        }`}
-                      >
-                        <Moon size={18} />
-                        <span>Dark</span>
-                      </button>
-
-                      <button
-                        onClick={() => setTheme('system')}
-                        className={`p-3 rounded-2xl border flex flex-col items-center gap-2 text-xs font-medium transition-all ${
-                          theme === 'system'
-                            ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400'
-                            : 'border-border-light dark:border-border-dark text-text-secondaryLight dark:text-text-secondaryDark hover:border-gray-400'
-                        }`}
-                      >
-                        <Monitor size={18} />
-                        <span>System</span>
-                      </button>
+                <div className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                        Send message on Enter
+                      </h4>
+                      <p className="text-[11px] text-gray-400">Press Enter to submit, Shift+Enter for newline</p>
                     </div>
+                    <input
+                      type="checkbox"
+                      checked={enterToSubmit}
+                      onChange={(e) => updateSettings({ enterToSubmit: e.target.checked })}
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                        Auto-scroll on stream
+                      </h4>
+                      <p className="text-[11px] text-gray-400">Keep latest messages in view automatically</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={autoScroll}
+                      onChange={(e) => updateSettings({ autoScroll: e.target.checked })}
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                        Always on Top Window
+                      </h4>
+                      <p className="text-[11px] text-gray-400">Keep MSK window pinned above other apps</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={alwaysOnTop}
+                      onChange={toggleAlwaysOnTop}
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                    />
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {activeTab === 'providers' && (
-                <div className="space-y-6">
-                  {/* Provider Selection */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-text-primaryLight dark:text-text-primaryDark">
-                      Active AI Provider
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => setActiveProvider('mock')}
-                        className={`p-3 rounded-2xl border text-left space-y-1 transition-all ${
-                          activeProviderId === 'mock'
-                            ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/40'
-                            : 'border-border-light dark:border-border-dark hover:border-gray-400'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-text-primaryLight dark:text-text-primaryDark">
-                          <Cpu size={15} className="text-emerald-500" />
-                          <span>MSK Demo Engine</span>
-                        </div>
-                        <p className="text-[11px] text-text-secondaryLight dark:text-text-secondaryDark">
-                          No API key required. Instant streaming simulation.
-                        </p>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveProvider('openai')}
-                        className={`p-3 rounded-2xl border text-left space-y-1 transition-all ${
-                          activeProviderId === 'openai'
-                            ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/40'
-                            : 'border-border-light dark:border-border-dark hover:border-gray-400'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-text-primaryLight dark:text-text-primaryDark">
-                          <Sparkles size={15} className="text-blue-500" />
-                          <span>OpenAI API</span>
-                        </div>
-                        <p className="text-[11px] text-text-secondaryLight dark:text-text-secondaryDark">
-                          GPT-4o, GPT-4o-mini & custom API endpoints.
-                        </p>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* OpenAI Key Configuration */}
-                  <div className="space-y-4 pt-2 border-t border-border-light dark:border-border-dark">
-                    <h4 className="text-xs font-bold text-text-primaryLight dark:text-text-primaryDark">
-                      OpenAI Credentials
-                    </h4>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-text-secondaryLight dark:text-text-secondaryDark">
-                        API Key
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="sk-proj-..."
-                        value={openAiKey}
-                        onChange={(e) => setOpenAiKey(e.target.value)}
-                        className="w-full p-2.5 rounded-xl text-xs bg-gray-50 dark:bg-slate-900 border border-border-light dark:border-border-dark text-text-primaryLight dark:text-text-primaryDark font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-text-secondaryLight dark:text-text-secondaryDark">
-                        Custom Base URL (Optional for proxies/local gateways)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="https://api.openai.com/v1"
-                        value={openAiUrl}
-                        onChange={(e) => setOpenAiUrl(e.target.value)}
-                        className="w-full p-2.5 rounded-xl text-xs bg-gray-50 dark:bg-slate-900 border border-border-light dark:border-border-dark text-text-primaryLight dark:text-text-primaryDark font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
+            {activeSettingsTab === 'appearance' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                    Theme Preference
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    Choose your desktop interface style.
+                  </p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      onClick={() => setTheme('light')}
+                      className={`p-4 rounded-xl border flex flex-col items-center gap-2 text-xs font-semibold transition-all ${
+                        theme === 'light'
+                          ? 'border-blue-500 bg-blue-50/50 text-blue-600'
+                          : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <Sun className="w-5 h-5 text-amber-500" />
+                      <span>Light Mode</span>
+                    </button>
 
                     <button
-                      onClick={handleSaveProviders}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-soft"
+                      onClick={() => setTheme('dark')}
+                      className={`p-4 rounded-xl border flex flex-col items-center gap-2 text-xs font-semibold transition-all ${
+                        theme === 'dark'
+                          ? 'border-blue-500 bg-blue-50/50 text-blue-600'
+                          : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                      }`}
                     >
-                      Save Configuration
+                      <Moon className="w-5 h-5 text-indigo-500" />
+                      <span>Dark Mode</span>
+                    </button>
+
+                    <button
+                      onClick={() => setTheme('system')}
+                      className={`p-4 rounded-xl border flex flex-col items-center gap-2 text-xs font-semibold transition-all ${
+                        theme === 'system'
+                          ? 'border-blue-500 bg-blue-50/50 text-blue-600'
+                          : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <Monitor className="w-5 h-5 text-gray-500" />
+                      <span>System Sync</span>
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {activeTab === 'shortcuts' && (
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-text-primaryLight dark:text-text-primaryDark">
-                    Keyboard Shortcuts Cheatsheet
+            {activeSettingsTab === 'providers' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                    Active AI Provider
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-3">
+                    {providers.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          setActiveProviderId(p.id);
+                          updateSettings({ activeProvider: p.id });
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          activeProviderId === p.id
+                            ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 font-semibold'
+                            : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 opacity-80'
+                        }`}
+                      >
+                        <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+                          {p.name}
+                        </div>
+                        <div className="text-[10px] text-gray-400 truncate mt-0.5">
+                          {p.isAvailable ? 'Ready' : 'Extensible'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 space-y-4">
+                  <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                    OpenAI API Configuration
                   </h4>
-                  <div className="divide-y divide-border-light dark:divide-border-dark text-xs">
-                    <div className="py-2.5 flex justify-between items-center">
-                      <span className="text-text-primaryLight dark:text-text-primaryDark">New Conversation</span>
-                      <kbd className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 border border-border-light dark:border-border-dark font-mono text-[11px]">
-                        Ctrl + N
-                      </kbd>
+
+                  <div>
+                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mb-1">
+                      API Key
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type={showKey ? 'text' : 'password'}
+                          placeholder="sk-..."
+                          value={openaiApiKey}
+                          onChange={(e) => setOpenaiApiKey(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-xs font-mono text-gray-900 dark:text-gray-100 outline-none focus:border-blue-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowKey(!showKey)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                      <button
+                        onClick={handleTestKey}
+                        disabled={validating}
+                        className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-medium flex items-center gap-1"
+                      >
+                        {validating ? 'Testing...' : 'Test Key'}
+                      </button>
                     </div>
-                    <div className="py-2.5 flex justify-between items-center">
-                      <span className="text-text-primaryLight dark:text-text-primaryDark">Command Palette & Search</span>
-                      <kbd className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 border border-border-light dark:border-border-dark font-mono text-[11px]">
-                        Ctrl + K
-                      </kbd>
-                    </div>
-                    <div className="py-2.5 flex justify-between items-center">
-                      <span className="text-text-primaryLight dark:text-text-primaryDark">Toggle Left Sidebar</span>
-                      <kbd className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 border border-border-light dark:border-border-dark font-mono text-[11px]">
-                        Ctrl + B
-                      </kbd>
-                    </div>
-                    <div className="py-2.5 flex justify-between items-center">
-                      <span className="text-text-primaryLight dark:text-text-primaryDark">Toggle Context Drawer</span>
-                      <kbd className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 border border-border-light dark:border-border-dark font-mono text-[11px]">
-                        Ctrl + I
-                      </kbd>
-                    </div>
-                    <div className="py-2.5 flex justify-between items-center">
-                      <span className="text-text-primaryLight dark:text-text-primaryDark">Open Settings</span>
-                      <kbd className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 border border-border-light dark:border-border-dark font-mono text-[11px]">
-                        Ctrl + ,
-                      </kbd>
-                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block mb-1">
+                      Active Model
+                    </label>
+                    <select
+                      value={activeModel}
+                      onChange={(e) => setActiveModel(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-xs font-semibold text-gray-900 dark:text-gray-100 outline-none"
+                    >
+                      <option value="gpt-4o">GPT-4o (Recommended for coding & architecture)</option>
+                      <option value="gpt-4o-mini">GPT-4o Mini (Fast & lightweight)</option>
+                      <option value="o3-mini">o3-mini (Advanced reasoning)</option>
+                    </select>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {activeTab === 'about' && (
-                <div className="space-y-4 text-center sm:text-left">
-                  <div className="flex flex-col items-center sm:items-start gap-2">
-                    <Logo size={42} showText={true} />
-                    <span className="text-xs text-text-secondaryLight dark:text-text-secondaryDark">
-                      Version 1.0.0 (Production Desktop Release)
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-text-secondaryLight dark:text-text-secondaryDark leading-relaxed">
-                    MSK (My Saviour Knight) is a modern, modular desktop AI companion built with Tauri v2, React 19, TypeScript, Vite, and Framer Motion.
-                  </p>
-
-                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark space-y-2 text-xs">
-                    <div className="font-semibold text-text-primaryLight dark:text-text-primaryDark flex items-center gap-1.5">
-                      <Zap size={14} className="text-amber-500" />
-                      <span>Architecture & Future Capabilities</span>
-                    </div>
-                    <ul className="list-disc list-inside space-y-1 text-text-secondaryLight dark:text-text-secondaryDark text-[11px]">
-                      <li>Decoupled Provider Architecture (OpenAI, Ollama, Claude, Gemini)</li>
-                      <li>Built-in RAG & Document Search Readiness</li>
-                      <li>OCR & Image Understanding Integration</li>
-                      <li>Voice Assistant (Speech-to-Text & Text-to-Speech)</li>
-                      <li>Automation & System Tray Capabilities</li>
-                    </ul>
-                  </div>
+            {activeSettingsTab === 'shortcuts' && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                  Keyboard Shortcuts
+                </h3>
+                <div className="space-y-2">
+                  <ShortcutRow label="Command Palette" keys="Ctrl + K" />
+                  <ShortcutRow label="New Conversation" keys="Ctrl + N" />
+                  <ShortcutRow label="Toggle Sidebar" keys="Ctrl + B" />
+                  <ShortcutRow label="Toggle Inspector" keys="Ctrl + I" />
+                  <ShortcutRow label="Open Preferences" keys="Ctrl + ," />
+                  <ShortcutRow label="Toggle Compact Overlay" keys="Ctrl + Shift + O" />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {activeSettingsTab === 'about' && (
+              <div className="text-center py-6 space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-violet-700 flex items-center justify-center text-white mx-auto shadow-xl">
+                  <Shield className="w-9 h-9" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    My Saviour Knight (MSK)
+                  </h3>
+                  <p className="text-xs text-blue-500 font-semibold">Version 1.0.0 • AI Operating System</p>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto leading-relaxed">
+                  MSK is a high-performance desktop AI companion built with Tauri v2, React 19, and TypeScript.
+                </p>
+              </div>
+            )}
           </div>
-        </motion.div>
+        </div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 };
+
+const ShortcutRow: React.FC<{ label: string; keys: string }> = ({ label, keys }) => (
+  <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-950 border border-gray-100 dark:border-gray-800 text-xs">
+    <span className="text-gray-700 dark:text-gray-300 font-medium">{label}</span>
+    <span className="font-mono bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-800 dark:text-gray-200 text-[11px]">
+      {keys}
+    </span>
+  </div>
+);

@@ -1,95 +1,85 @@
-import { AIProvider } from './AIProvider';
-import { OpenAIProvider } from './OpenAIProvider';
-import { MockAIProvider } from './MockAIProvider';
-import { AIModel, ChatRequest, ChatResponse } from '../../types/ai';
+import { ProviderManager } from './ProviderManager';
+import { StreamingManager } from './StreamingManager';
+import { ConversationManager } from './ConversationManager';
+import {
+  ChatMessage,
+  AIProviderConfig,
+  StreamCallback,
+  ModelInfo,
+} from '../../shared/types/ai';
 
 export class AIService {
-  private static instance: AIService;
-  private providers = new Map<string, AIProvider>();
-  private activeAbortController: AbortController | null = null;
+  private providerManager: ProviderManager;
+  private streamingManager: StreamingManager;
+  private conversationManager: ConversationManager;
 
-  private constructor() {
-    this.registerProvider(new MockAIProvider());
-    this.registerProvider(new OpenAIProvider());
+  constructor() {
+    this.providerManager = new ProviderManager();
+    this.streamingManager = new StreamingManager();
+    this.conversationManager = new ConversationManager();
   }
 
-  public static getInstance(): AIService {
-    if (!AIService.instance) {
-      AIService.instance = new AIService();
-    }
-    return AIService.instance;
+  getProviderManager(): ProviderManager {
+    return this.providerManager;
   }
 
-  public registerProvider(provider: AIProvider): void {
-    this.providers.set(provider.id, provider);
+  getConversationManager(): ConversationManager {
+    return this.conversationManager;
   }
 
-  public getProvider(providerId: string): AIProvider | undefined {
-    return this.providers.get(providerId);
-  }
-
-  public async getAllModels(): Promise<AIModel[]> {
-    const allModels: AIModel[] = [];
-    for (const provider of this.providers.values()) {
-      try {
-        const models = await provider.getModels();
-        allModels.push(...models);
-      } catch (err) {
-        console.warn(`Failed to fetch models for provider ${provider.id}`, err);
-      }
-    }
-    return allModels;
-  }
-
-  public async chat(
+  async streamCompletion(
+    messages: ChatMessage[],
     providerId: string,
-    request: ChatRequest,
-    apiKey?: string,
-    baseUrl?: string
-  ): Promise<ChatResponse> {
-    const provider = this.getProvider(providerId);
-    if (!provider) {
-      throw new Error(`Provider "${providerId}" is not registered.`);
-    }
-    return provider.chat(request, apiKey, baseUrl);
-  }
-
-  public async stream(
-    providerId: string,
-    request: ChatRequest,
-    onChunk: (chunk: string) => void,
-    apiKey?: string,
-    baseUrl?: string
+    modelId: string,
+    config: AIProviderConfig,
+    onChunk: StreamCallback,
+    systemPrompt?: string
   ): Promise<void> {
-    this.stopStream(); // Cancel any existing stream
-    this.activeAbortController = new AbortController();
-
-    const provider = this.getProvider(providerId);
-    if (!provider) {
-      throw new Error(`Provider "${providerId}" is not registered.`);
-    }
+    const provider = this.providerManager.getProvider(providerId);
+    const signal = this.streamingManager.startStream();
 
     try {
-      await provider.stream(
-        request,
-        onChunk,
-        apiKey,
-        baseUrl,
-        this.activeAbortController.signal
+      await provider.streamMessage(
+        messages,
+        modelId,
+        config,
+        (chunk) => {
+          if (chunk.done) {
+            this.streamingManager.finishStream();
+          }
+          onChunk(chunk);
+        },
+        systemPrompt,
+        signal
       );
-    } finally {
-      this.activeAbortController = null;
+    } catch (err: any) {
+      this.streamingManager.finishStream();
+      onChunk({
+        delta: '',
+        done: true,
+        error: err.message || 'Failed to stream response from provider',
+      });
     }
   }
 
-  public stopStream(): void {
-    if (this.activeAbortController) {
-      this.activeAbortController.abort();
-      this.activeAbortController = null;
-    }
+  stopStream(): void {
+    this.streamingManager.stopStream();
   }
 
-  public isStreaming(): boolean {
-    return this.activeAbortController !== null;
+  getIsStreaming(): boolean {
+    return this.streamingManager.getIsStreaming();
+  }
+
+  getAvailableModels(providerId: string): ModelInfo[] {
+    const provider = this.providerManager.getProvider(providerId);
+    return provider.models;
+  }
+
+  async validateKey(providerId: string, config: AIProviderConfig): Promise<boolean> {
+    const provider = this.providerManager.getProvider(providerId);
+    return provider.validateConfig(config);
   }
 }
+
+// Global Singleton Instance for application-wide decoupling
+export const aiService = new AIService();

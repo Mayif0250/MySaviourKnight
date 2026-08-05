@@ -1,139 +1,159 @@
-import React, { useState } from 'react';
+import React from 'react';
+import {
+  FileText,
+  Paperclip,
+  Brain,
+  Puzzle,
+  Bot,
+  X,
+  ChevronRight,
+  Shield,
+  Cpu,
+  Layers,
+} from 'lucide-react';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useConversationStore } from '../../store/conversationStore';
 import { useChatStore } from '../../store/chatStore';
-import { X, FileText, Cpu, Shield, Sparkles, Terminal, Puzzle, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 export const ContextPanel: React.FC = () => {
-  const { contextPanelOpen, setContextPanelOpen, activeModelId, activeProviderId, systemPrompt, setSystemPrompt } =
+  const { contextPanelOpen, activeRightPanelTab, updateSettings, systemPrompt, activeModel, activeProvider } =
     useSettingsStore();
+  const { activeConversationId } = useChatStore();
+  const { getConversationById } = useConversationStore();
 
-  const { conversations, activeConversationId } = useChatStore();
-  const activeChat = conversations.find((c) => c.id === activeConversationId);
-
-  const [promptText, setPromptText] = useState(systemPrompt);
+  const activeConv = activeConversationId ? getConversationById(activeConversationId) : null;
 
   if (!contextPanelOpen) return null;
 
+  const tabs = [
+    { id: 'context', label: 'Context', icon: FileText },
+    { id: 'attachments', label: 'Files', icon: Paperclip },
+    { id: 'memory', label: 'Memory', icon: Brain },
+    { id: 'plugins', label: 'Plugins', icon: Puzzle },
+    { id: 'agents', label: 'Agents', icon: Bot },
+  ] as const;
+
   return (
-    <motion.aside
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      transition={{ duration: 0.2 }}
-      className="w-80 h-full border-l border-border-light dark:border-border-dark bg-white dark:bg-background-cardDark flex flex-col z-20 shadow-soft"
-    >
-      {/* Header */}
-      <div className="h-14 px-4 border-b border-border-light dark:border-border-dark flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Shield size={16} className="text-blue-600" />
-          <span className="font-semibold text-sm text-text-primaryLight dark:text-text-primaryDark">
-            Context & Tools
-          </span>
+    <aside className="w-80 bg-gray-50/90 dark:bg-gray-950/90 border-l border-gray-200/80 dark:border-gray-800/80 flex flex-col h-[calc(100vh-2.5rem)] select-none z-30">
+      {/* Header Bar */}
+      <div className="p-3.5 border-b border-gray-200/80 dark:border-gray-800/80 flex items-center justify-between">
+        <div className="flex items-center gap-2 font-semibold text-xs text-gray-800 dark:text-gray-200">
+          <Layers className="w-4 h-4 text-blue-500" />
+          <span>Desktop Inspector</span>
         </div>
         <button
-          onClick={() => setContextPanelOpen(false)}
-          className="p-1 rounded-lg text-text-secondaryLight dark:text-text-secondaryDark hover:bg-gray-100 dark:hover:bg-gray-800"
+          onClick={() => updateSettings({ contextPanelOpen: false })}
+          title="Close Inspector (Ctrl+I)"
+          className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-800/60 transition-colors"
         >
-          <X size={16} />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Content Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Metadata section */}
-        <div className="space-y-2">
-          <span className="text-[11px] font-semibold tracking-wider text-text-secondaryLight dark:text-text-secondaryDark uppercase">
-            Active Session Metadata
-          </span>
-          <div className="p-3 rounded-xl bg-gray-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark space-y-2 text-xs">
-            <div className="flex justify-between">
-              <span className="text-text-secondaryLight dark:text-text-secondaryDark">Provider</span>
-              <span className="font-semibold text-text-primaryLight dark:text-text-primaryDark uppercase">
-                {activeChat?.providerId || activeProviderId}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-text-secondaryLight dark:text-text-secondaryDark">Model</span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400">
-                {activeChat?.modelId || activeModelId}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-text-secondaryLight dark:text-text-secondaryDark">Messages</span>
-              <span className="font-semibold text-text-primaryLight dark:text-text-primaryDark">
-                {activeChat?.messages.length || 0}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* System Prompt Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold tracking-wider text-text-secondaryLight dark:text-text-secondaryDark uppercase">
-              System Instruction
-            </span>
-          </div>
-          <textarea
-            rows={4}
-            value={promptText}
-            onChange={(e) => setPromptText(e.target.value)}
-            onBlur={() => setSystemPrompt(promptText)}
-            placeholder="Define system prompt for MSK..."
-            className="w-full p-2.5 rounded-xl text-xs bg-gray-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark text-text-primaryLight dark:text-text-primaryDark focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none font-mono"
-          />
-        </div>
-
-        {/* Modular Extensible Plugin Capabilities */}
-        <div className="space-y-2">
-          <span className="text-[11px] font-semibold tracking-wider text-text-secondaryLight dark:text-text-secondaryDark uppercase">
-            Agent Capabilities & Extensions
-          </span>
-
-          <div className="space-y-2 text-xs">
-            <div className="p-3 rounded-xl border border-border-light dark:border-border-dark flex items-center justify-between opacity-80">
-              <div className="flex items-center gap-2">
-                <Cpu size={15} className="text-emerald-500" />
-                <span className="font-medium text-text-primaryLight dark:text-text-primaryDark">Local RAG / Knowledge</span>
-              </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-text-secondaryLight dark:text-text-secondaryDark">
-                Ready
-              </span>
-            </div>
-
-            <div className="p-3 rounded-xl border border-border-light dark:border-border-dark flex items-center justify-between opacity-80">
-              <div className="flex items-center gap-2">
-                <Terminal size={15} className="text-indigo-500" />
-                <span className="font-medium text-text-primaryLight dark:text-text-primaryDark">OCR & Vision Analysis</span>
-              </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-text-secondaryLight dark:text-text-secondaryDark">
-                Ready
-              </span>
-            </div>
-
-            <div className="p-3 rounded-xl border border-border-light dark:border-border-dark flex items-center justify-between opacity-80">
-              <div className="flex items-center gap-2">
-                <Zap size={15} className="text-amber-500" />
-                <span className="font-medium text-text-primaryLight dark:text-text-primaryDark">Voice Assistant & STT</span>
-              </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-text-secondaryLight dark:text-text-secondaryDark">
-                Ready
-              </span>
-            </div>
-
-            <div className="p-3 rounded-xl border border-border-light dark:border-border-dark flex items-center justify-between opacity-80">
-              <div className="flex items-center gap-2">
-                <Puzzle size={15} className="text-purple-500" />
-                <span className="font-medium text-text-primaryLight dark:text-text-primaryDark">Plugin Marketplace</span>
-              </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-text-secondaryLight dark:text-text-secondaryDark">
-                Ready
-              </span>
-            </div>
-          </div>
-        </div>
+      {/* Tab Selector Bar */}
+      <div className="flex items-center justify-between px-2 py-1 bg-gray-100/50 dark:bg-gray-900/50 border-b border-gray-200/80 dark:border-gray-800/80">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeRightPanelTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => updateSettings({ activeRightPanelTab: tab.id })}
+              title={tab.label}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                isActive
+                  ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
-    </motion.aside>
+
+      {/* Tab Content Body */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs text-gray-700 dark:text-gray-300">
+        {activeRightPanelTab === 'context' && (
+          <div className="space-y-4">
+            <div className="p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 space-y-2">
+              <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-blue-500" />
+                <span>Active Model Specs</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-500">Provider</span>
+                <span className="font-semibold capitalize text-gray-900 dark:text-gray-100">
+                  {activeProvider}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-500">Model</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  {activeModel}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-gray-500">Messages Count</span>
+                <span className="font-mono text-gray-900 dark:text-gray-100">
+                  {activeConv ? activeConv.messages.length : 0}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 space-y-2">
+              <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Active System Prompt</span>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed italic bg-gray-50 dark:bg-gray-950 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800">
+                "{systemPrompt}"
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeRightPanelTab === 'attachments' && (
+          <div className="p-4 text-center rounded-xl bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 space-y-2">
+            <Paperclip className="w-6 h-6 text-gray-400 mx-auto" />
+            <h4 className="font-medium text-xs text-gray-800 dark:text-gray-200">No Attachments</h4>
+            <p className="text-[11px] text-gray-400">
+              Drag code snippets, documents, or screenshots into the input area.
+            </p>
+          </div>
+        )}
+
+        {activeRightPanelTab === 'memory' && (
+          <div className="p-4 text-center rounded-xl bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 space-y-2">
+            <Brain className="w-6 h-6 text-gray-400 mx-auto" />
+            <h4 className="font-medium text-xs text-gray-800 dark:text-gray-200">AI Context Memory</h4>
+            <p className="text-[11px] text-gray-400">
+              MSK remembers user coding preferences and system instructions across sessions.
+            </p>
+          </div>
+        )}
+
+        {activeRightPanelTab === 'plugins' && (
+          <div className="p-4 text-center rounded-xl bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 space-y-2">
+            <Puzzle className="w-6 h-6 text-blue-500 mx-auto" />
+            <h4 className="font-medium text-xs text-gray-800 dark:text-gray-200">Plugin Marketplace</h4>
+            <p className="text-[11px] text-gray-400">
+              Extend MSK with custom tool integrations and API tools.
+            </p>
+          </div>
+        )}
+
+        {activeRightPanelTab === 'agents' && (
+          <div className="p-4 text-center rounded-xl bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 space-y-2">
+            <Bot className="w-6 h-6 text-indigo-500 mx-auto" />
+            <h4 className="font-medium text-xs text-gray-800 dark:text-gray-200">Autonomous Sub-Agents</h4>
+            <p className="text-[11px] text-gray-400">
+              Spawn background coding and research agents to assist in real-time.
+            </p>
+          </div>
+        )}
+      </div>
+    </aside>
   );
 };

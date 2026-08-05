@@ -1,154 +1,199 @@
-import { AIProvider } from './AIProvider';
-import { AIModel, ChatRequest, ChatResponse } from '../../types/ai';
+import {
+  AIProviderInterface,
+  AIProviderConfig,
+  ChatMessage,
+  ModelInfo,
+  StreamCallback,
+} from '../../shared/types/ai';
 
-export class OpenAIProvider implements AIProvider {
-  readonly id = 'openai';
-  readonly name = 'OpenAI';
-  readonly description = 'GPT-4o, GPT-4o-mini, and custom OpenAI-compatible models.';
-  readonly isLocal = false;
+export class OpenAIProvider implements AIProviderInterface {
+  id = 'openai';
+  name = 'OpenAI';
+  description = 'OpenAI GPT-4o, GPT-4o-mini & reasoning models';
+  isAvailable = true;
 
-  async getModels(): Promise<AIModel[]> {
-    return [
-      {
-        id: 'gpt-4o',
-        name: 'GPT-4o',
-        providerId: this.id,
-        description: 'Omni model for complex reasoning, code, and multimodal tasks.',
-        contextWindow: 128000,
-        supportsVision: true,
-        supportsStreaming: true,
-      },
-      {
-        id: 'gpt-4o-mini',
-        name: 'GPT-4o Mini',
-        providerId: this.id,
-        description: 'Fast, lightweight, affordable intelligence.',
-        contextWindow: 128000,
-        supportsVision: true,
-        supportsStreaming: true,
-      },
-      {
-        id: 'o1-mini',
-        name: 'o1-mini',
-        providerId: this.id,
-        description: 'Reasoning model optimized for STEM and code problems.',
-        contextWindow: 128000,
-        supportsStreaming: true,
-      },
-    ];
+  models: ModelInfo[] = [
+    {
+      id: 'gpt-4o',
+      name: 'GPT-4o',
+      description: 'Omni model for complex reasoning and coding',
+      contextWindow: 128000,
+      maxTokens: 4096,
+      recommended: true,
+    },
+    {
+      id: 'gpt-4o-mini',
+      name: 'GPT-4o Mini',
+      description: 'Fast, lightweight model for daily tasks',
+      contextWindow: 128000,
+      maxTokens: 4096,
+    },
+    {
+      id: 'o3-mini',
+      name: 'o3-mini',
+      description: 'Advanced STEM and algorithmic reasoning model',
+      contextWindow: 200000,
+      maxTokens: 65536,
+    },
+  ];
+
+  private getBaseUrl(config: AIProviderConfig): string {
+    return (config.baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
   }
 
-  async chat(request: ChatRequest, apiKey?: string, baseUrl?: string): Promise<ChatResponse> {
-    if (!apiKey) {
-      throw new Error('OpenAI API Key is missing. Please add your key in Settings.');
+  async validateConfig(config: AIProviderConfig): Promise<boolean> {
+    if (!config.apiKey) return false;
+    try {
+      const response = await fetch(`${this.getBaseUrl(config)}/models`, {
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  private formatMessages(messages: ChatMessage[], systemPrompt?: string) {
+    const formatted = [];
+    if (systemPrompt) {
+      formatted.push({ role: 'system', content: systemPrompt });
+    }
+    for (const msg of messages) {
+      formatted.push({
+        role: msg.role,
+        content: msg.content,
+      });
+    }
+    return formatted;
+  }
+
+  async sendMessage(
+    messages: ChatMessage[],
+    model: string,
+    config: AIProviderConfig,
+    systemPrompt?: string
+  ): Promise<string> {
+    if (!config.apiKey) {
+      throw new Error('OpenAI API Key is required. Please set it in Settings.');
     }
 
-    const endpoint = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '') + '/chat/completions';
-    
-    const formattedMessages = [];
-    if (request.systemPrompt) {
-      formattedMessages.push({ role: 'system', content: request.systemPrompt });
-    }
-    formattedMessages.push(...request.messages);
+    const payload = {
+      model: model || 'gpt-4o-mini',
+      messages: this.formatMessages(messages, systemPrompt),
+    };
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${this.getBaseUrl(config)}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${config.apiKey}`,
       },
-      body: JSON.stringify({
-        model: request.model,
-        messages: formattedMessages,
-        temperature: request.temperature ?? 0.7,
-        max_tokens: request.maxTokens,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `OpenAI API Error: ${response.status} ${response.statusText}`);
+      throw new Error(
+        errorData.error?.message || `OpenAI API error (${response.status})`
+      );
     }
 
     const data = await response.json();
-    return {
-      content: data.choices[0]?.message?.content || '',
-      usage: {
-        promptTokens: data.usage?.prompt_tokens || 0,
-        completionTokens: data.usage?.completion_tokens || 0,
-        totalTokens: data.usage?.total_tokens || 0,
-      },
-    };
+    return data.choices?.[0]?.message?.content || '';
   }
 
-  async stream(
-    request: ChatRequest,
-    onChunk: (chunk: string) => void,
-    apiKey?: string,
-    baseUrl?: string,
+  async streamMessage(
+    messages: ChatMessage[],
+    model: string,
+    config: AIProviderConfig,
+    onChunk: StreamCallback,
+    systemPrompt?: string,
     signal?: AbortSignal
   ): Promise<void> {
-    if (!apiKey) {
-      throw new Error('OpenAI API Key is missing. Please configure it in Settings.');
+    if (!config.apiKey) {
+      onChunk({
+        delta: '',
+        done: true,
+        error: 'OpenAI API Key is missing. Please configure your key in Settings.',
+      });
+      return;
     }
 
-    const endpoint = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '') + '/chat/completions';
+    const payload = {
+      model: model || 'gpt-4o-mini',
+      messages: this.formatMessages(messages, systemPrompt),
+      stream: true,
+    };
 
-    const formattedMessages = [];
-    if (request.systemPrompt) {
-      formattedMessages.push({ role: 'system', content: request.systemPrompt });
-    }
-    formattedMessages.push(...request.messages);
+    try {
+      const response = await fetch(`${this.getBaseUrl(config)}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+        body: JSON.stringify(payload),
+        signal,
+      });
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: request.model,
-        messages: formattedMessages,
-        temperature: request.temperature ?? 0.7,
-        stream: true,
-      }),
-      signal,
-    });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const msg = errorData.error?.message || `API error ${response.status}`;
+        onChunk({ delta: '', done: true, error: msg });
+        return;
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `OpenAI Stream Error: ${response.status}`);
-    }
+      if (!response.body) {
+        onChunk({ delta: '', done: true, error: 'Empty response body from server.' });
+        return;
+      }
 
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error('Failed to obtain stream reader');
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
 
-    const decoder = new TextDecoder('utf-8');
-    let buffer = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith(':')) continue;
-        if (trimmed === 'data: [DONE]') return;
-        if (trimmed.startsWith('data: ')) {
-          try {
-            const parsed = JSON.parse(trimmed.slice(6));
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) {
-              onChunk(delta);
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith(':')) continue;
+          if (trimmed === 'data: [DONE]') {
+            onChunk({ delta: '', done: true });
+            return;
+          }
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const jsonStr = trimmed.slice(6);
+              const data = JSON.parse(jsonStr);
+              const contentDelta = data.choices?.[0]?.delta?.content || '';
+              if (contentDelta) {
+                onChunk({ delta: contentDelta, done: false });
+              }
+            } catch {
+              // Ignore invalid chunk JSON lines
             }
-          } catch (e) {
-            // Ignore parse errors on partial chunks
           }
         }
+      }
+
+      onChunk({ delta: '', done: true });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        onChunk({ delta: '', done: true });
+      } else {
+        onChunk({
+          delta: '',
+          done: true,
+          error: err.message || 'Stream processing error',
+        });
       }
     }
   }
