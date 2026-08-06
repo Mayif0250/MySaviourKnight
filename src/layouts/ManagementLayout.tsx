@@ -5,17 +5,16 @@ import { ChatArea } from '../features/chat/ChatArea';
 import { ContextPanel } from '../features/chat/ContextPanel';
 import { CommandPalette } from '../shared/components/CommandPalette';
 import { SettingsModal } from '../features/settings/SettingsModal';
-import { CompactOverlayView } from '../features/chat/CompactOverlayView';
 import { useSettingsStore } from '../store/settingsStore';
 import { useUIStore } from '../store/uiStore';
 import { useConversationStore } from '../store/conversationStore';
 import { useChatStore } from '../store/chatStore';
 import { Toaster } from 'sonner';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
-export const MainLayout: React.FC = () => {
-  const { compactOverlay, toggleCompactOverlay, updateSettings, sidebarCollapsed, contextPanelOpen } =
-    useSettingsStore();
-  const { toggleCommandPalette, setSettingsModalOpen } = useUIStore();
+export const ManagementLayout: React.FC = () => {
+  const { updateSettings, sidebarCollapsed, contextPanelOpen } = useSettingsStore();
+  const { setSettingsModalOpen } = useUIStore();
   const { createConversation } = useConversationStore();
   const { setActiveConversationId } = useChatStore();
 
@@ -23,10 +22,7 @@ export const MainLayout: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase();
-        if (e.shiftKey && key === 'o') {
-          e.preventDefault();
-          toggleCompactOverlay();
-        } else if (key === 'b') {
+        if (key === 'b') {
           e.preventDefault();
           updateSettings({ sidebarCollapsed: !sidebarCollapsed });
         } else if (key === 'i') {
@@ -41,42 +37,24 @@ export const MainLayout: React.FC = () => {
           setSettingsModalOpen(true);
         }
       }
+      if (e.key === 'Escape') {
+        // Optionally let escape close management window or clear focus
+        // getCurrentWindow().close();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    compactOverlay,
-    sidebarCollapsed,
-    contextPanelOpen,
-    toggleCompactOverlay,
-    updateSettings,
-    createConversation,
-    setActiveConversationId,
-    setSettingsModalOpen,
-  ]);
-
-  if (compactOverlay) {
-    return (
-      <div className="h-screen w-screen bg-transparent overflow-hidden font-sans">
-        <CompactOverlayView />
-      </div>
-    );
-  }
+  }, [sidebarCollapsed, contextPanelOpen, updateSettings, createConversation, setActiveConversationId, setSettingsModalOpen]);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden font-sans select-none">
-      {/* Top Desktop Drag Titlebar */}
+    <div className="h-screen w-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden font-sans select-none border border-gray-700/50 rounded-xl">
       <Titlebar />
-
-      {/* Main Workspace Body */}
       <div className="flex-1 flex overflow-hidden relative">
         <Sidebar />
         <ChatArea />
         <ContextPanel />
       </div>
-
-      {/* Global Dialogs & Toasts */}
       <CommandPalette />
       <SettingsModal />
       <Toaster position="bottom-right" theme="system" richColors />

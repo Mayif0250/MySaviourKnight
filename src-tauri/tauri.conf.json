@@ -12,17 +12,21 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "MSK - My Saviour Knight",
-        "width": 1280,
-        "height": 830,
-        "minWidth": 420,
-        "minHeight": 100,
+        "width": 700,
+        "height": 550,
+        "minWidth": 400,
+        "minHeight": 300,
         "resizable": true,
         "fullscreen": false,
         "decorations": false,
         "transparent": true,
         "shadow": true,
-        "center": true
+        "center": true,
+        "alwaysOnTop": true,
+        "visible": false,
+        "skipTaskbar": true
       }
     ],
     "security": {
