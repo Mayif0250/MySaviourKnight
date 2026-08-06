@@ -14,6 +14,15 @@
   }
 }
 
+@keyframes overlay-appear {
+  0% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-overlay {
+  animation: overlay-appear 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
