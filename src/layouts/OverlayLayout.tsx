@@ -14,8 +14,7 @@ import {
   Camera,
   Send
 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { MarkdownRenderer } from '../components/chat/MarkdownRenderer';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
@@ -273,19 +272,10 @@ export const OverlayLayout: React.FC = () => {
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
-                    <div className="prose prose-sm prose-invert max-w-full min-w-0 prose-p:leading-relaxed prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/10 prose-pre:max-w-full prose-pre:whitespace-pre-wrap overflow-wrap-anywhere break-words">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          code({ inline, className, children, ...props }: any) {
-                            return <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-[13px]">{children}</code>;
-                          }
-                        }}
-                      >
-                        {response}
-                      </ReactMarkdown>
+                    <div className="relative">
+                      <MarkdownRenderer content={response} />
                       {isStreaming && (
-                        <div className="inline-flex gap-1 ml-[8px] items-center h-[20px]">
+                        <div className="inline-flex gap-1 items-center h-[20px] mt-2">
                           <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s' }} />
                           <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s', animationDelay: '0.2s' }} />
                           <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s', animationDelay: '0.4s' }} />
