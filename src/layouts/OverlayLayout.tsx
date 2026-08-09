@@ -8,7 +8,11 @@ import {
   Check,
   Paperclip,
   Mic,
-  Pin
+  Pin,
+  Plus,
+  Clock,
+  Camera,
+  Send
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -133,79 +137,112 @@ export const OverlayLayout: React.FC = () => {
   };
 
   return (
-    <div 
-      className="h-screen w-screen bg-transparent overflow-hidden p-3 flex flex-col"
-      style={{ fontFamily: "'Inter', sans-serif" }}
+    <div
+      data-tauri-drag-region
+      onMouseDown={(e) => {
+        // Only drag if clicking the transparent background directly
+        if (e.target === e.currentTarget && e.button === 0) {
+          getCurrentWindow().startDragging();
+        }
+      }}
+      className="h-screen w-screen bg-transparent flex flex-col items-center justify-start p-3"
+      style={{ fontFamily: "'Segoe UI', 'Inter', sans-serif" }}
     >
-      <div 
-        className="flex-1 flex flex-col overflow-hidden animate-overlay"
+      <div
+        className="flex flex-col animate-overlay shadow-lg"
         style={{
-          backgroundColor: 'rgba(20,20,22,0.82)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '18px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+          width: '420px',
+          maxHeight: '100%',
+          backgroundColor: 'transparent',
+          border: '1px solid transparent',
+          borderRadius: '8px',
+          overflow: 'hidden'
         }}
       >
-        
+
         {/* Title Bar */}
-        <div 
-          data-tauri-drag-region 
-          className="flex items-center justify-between px-4 cursor-move"
-          style={{ height: '38px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+        <div
+          data-tauri-drag-region
+          onMouseDown={(e) => {
+            // Only drag if left mouse button is pressed and not clicking a button
+            if (e.button === 0 && (e.target as HTMLElement).tagName !== 'BUTTON') {
+              getCurrentWindow().startDragging();
+            }
+          }}
+          className="flex items-center justify-between cursor-move drag-region"
+          style={{ height: '32px', backgroundColor: '#232323', borderRadius: '8px 8px 0 0' }}
         >
-          <div className="flex items-center gap-2 pointer-events-none">
-            <div className="w-5 h-5 rounded bg-[#4F8CFF] flex items-center justify-center">
-              <Shield className="w-3 h-3 text-white" />
-            </div>
-            <span className="font-medium text-[14px]" style={{ color: 'rgba(255,255,255,0.96)' }}>MSK</span>
-            <span className="text-[13px] ml-1.5" style={{ color: 'rgba(255,255,255,0.65)' }}>Your Personal AI Companion</span>
+          <div className="flex items-center pointer-events-none">
+            <span className="font-semibold text-[15px] text-white ml-[12px]">MSK</span>
+            <span className="text-[13px] italic text-[#bbb] ml-[16px]">Your Personal AI Companion</span>
           </div>
-          
-          <div className="flex items-center gap-1 z-10">
+
+          <div className="flex items-center z-10 pr-[8px]">
             <button
-              onClick={togglePin}
-              className="p-1 rounded text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-              title={isPinned ? "Unpin window" : "Pin window to top"}
+              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
+              title="New Chat"
             >
-              <Pin className="w-3.5 h-3.5" style={{ transform: isPinned ? 'rotate(45deg)' : 'none' }} />
+              {"\uE710"}
+            </button>
+            <button
+              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
+              title="Chat History"
+            >
+              {"\uE823"}
             </button>
             <button
               onClick={openManagementWindow}
-              className="p-1 rounded text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-              title="Open Settings"
+              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
+              title="Settings"
             >
-              <Settings className="w-3.5 h-3.5" />
+              {"\uE713"}
             </button>
             <button
-              onClick={() => getCurrentWindow().hide()}
-              className="p-1 rounded text-white/50 hover:text-red-400 hover:bg-white/10 transition-colors"
-              title="Close (Esc)"
+              onClick={togglePin}
+              className="w-[24px] h-[24px] flex items-center justify-center text-white transition-colors ml-[4px] mt-[4px]"
+              style={{
+                fontFamily: "'Segoe Fluent Icons'",
+                fontSize: '16px',
+                borderRadius: '12px',
+                backgroundColor: isPinned ? '#223D29' : 'transparent',
+                alignSelf: 'flex-start'
+              }}
+              title={isPinned ? "Unpin window" : "Pin window to top"}
             >
-              <X className="w-3.5 h-3.5" />
+              {"\uE718"}
             </button>
           </div>
         </div>
 
         {/* Conversation Area */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 scroll-smooth">
+        <div
+          ref={scrollRef}
+          className="overflow-y-auto flex flex-col mb-[4px] scroll-smooth"
+          style={{
+            maxHeight: '1000px',
+            maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 100%)',
+            flex: '1 1 auto'
+          }}
+        >
           {!submittedQuery && !response ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(79, 140, 255, 0.15)' }}>
-                <Shield className="w-7 h-7 text-[#4F8CFF]" />
-              </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 min-h-[100px]">
+              <span className="text-white/30 text-[15px]">How can I help you today?</span>
             </div>
           ) : (
-            <>
+            <div className="flex flex-col mt-auto justify-end min-h-full">
               {submittedQuery && (
-                <div className="flex justify-end">
-                  <div 
-                    className="px-4 py-2.5 max-w-[85%] text-[14px] leading-relaxed shadow-sm"
+                <div className="flex justify-end mb-[8px]">
+                  <div
+                    className="max-w-[85%] text-[15px] p-[8px]"
                     style={{
-                      backgroundColor: 'rgba(79, 140, 255, 0.88)',
-                      color: 'rgba(255,255,255,0.96)',
-                      borderRadius: '16px 16px 2px 16px'
+                      backgroundColor: '#2979FF',
+                      color: 'white',
+                      borderRadius: '12px',
+                      wordWrap: 'break-word'
                     }}
                   >
                     {submittedQuery}
@@ -213,14 +250,13 @@ export const OverlayLayout: React.FC = () => {
                 </div>
               )}
               {response && (
-                <div className="flex justify-start relative group">
-                  <div 
-                    className="px-4 py-3 max-w-[95%] text-[15px] leading-relaxed relative"
+                <div className="flex justify-start relative group mb-[8px]">
+                  <div
+                    className="max-w-[95%] text-[15px] p-[8px] relative"
                     style={{
-                      backgroundColor: 'rgba(255,255,255,0.06)',
-                      color: 'rgba(255,255,255,0.96)',
-                      border: '1px solid rgba(255,255,255,0.04)',
-                      borderRadius: '16px 16px 16px 2px'
+                      backgroundColor: '#292929',
+                      color: 'white',
+                      borderRadius: '12px'
                     }}
                   >
                     <button
@@ -240,60 +276,71 @@ export const OverlayLayout: React.FC = () => {
                             if (!inline && (match || codeString.includes('\n'))) {
                               return <CodeBlock language={match ? match[1] : 'text'} value={codeString} />;
                             }
-                            return <code className="bg-white/10 px-1.5 py-0.5 rounded text-[#4F8CFF] font-mono text-[13px]">{children}</code>;
+                            return <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-[13px]">{children}</code>;
                           }
                         }}
                       >
                         {response}
                       </ReactMarkdown>
                       {isStreaming && (
-                        <span className="inline-block w-2 h-4 ml-1 align-middle bg-[#4F8CFF] animate-pulse" />
+                        <div className="inline-flex gap-1 ml-[8px] items-center h-[20px]">
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s' }} />
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s', animationDelay: '0.2s' }} />
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s', animationDelay: '0.4s' }} />
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
 
         {/* Input Area */}
-        <div className="p-3 pt-0">
-          <form 
-            onSubmit={handleSubmit} 
-            className="flex items-center gap-2 px-3 py-2 transition-all shadow-sm"
+        <div className="flex justify-center w-full relative" style={{ flex: '0 0 auto' }}>
+          <form
+            onSubmit={handleSubmit}
+            className="flex items-center w-[420px] p-[8px]"
             style={{
-              backgroundColor: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '24px'
+              backgroundColor: '#232323',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
             }}
           >
-            <button type="button" className="p-1.5 text-white/40 hover:text-white/80 transition-colors" title="Attach file (coming soon)">
-               <Paperclip className="w-4 h-4" />
+            <button
+              type="button"
+              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
+              title="Screenshot"
+            >
+              {"\uE114"}
             </button>
             <input
               type="text"
               autoFocus
-              placeholder="Ask anything..."
+              placeholder="Type or hold Ctrl+Space to speak..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[15px] placeholder-white/40"
-              style={{ color: 'rgba(255,255,255,0.96)' }}
+              className="flex-1 bg-transparent border-none outline-none text-[14px] ml-[6px] text-white"
+              style={{ minHeight: '28px', maxHeight: '120px' }}
             />
-            <button type="button" className="p-1.5 text-white/40 hover:text-white/80 transition-colors" title="Voice input (coming soon)">
-               <Mic className="w-4 h-4" />
-            </button>
             <button
               type="submit"
               disabled={!query.trim() || isStreaming}
-              className="p-1.5 rounded-full disabled:opacity-40 transition-colors flex items-center justify-center"
-              style={{ 
-                backgroundColor: query.trim() ? '#4F8CFF' : 'rgba(255,255,255,0.08)',
-                width: '32px',
-                height: '32px'
-              }}
+              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
+              title="Send"
             >
-              <ArrowRight className="w-4 h-4 text-white" />
+              {"\uE122"}
+            </button>
+            <button
+              type="button"
+              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              style={{ fontSize: '16px', borderRadius: '14px' }}
+              title="Voice reply"
+            >
+              🗣️
             </button>
           </form>
         </div>

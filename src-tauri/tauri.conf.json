@@ -25,6 +25,7 @@
         "shadow": true,
         "center": true,
         "alwaysOnTop": true,
+        "contentProtected": true,
         "visible": false,
         "skipTaskbar": true
       }

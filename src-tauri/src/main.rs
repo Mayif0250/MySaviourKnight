@@ -80,7 +80,7 @@ fn main() {
                                 let _ = window.show();
                                 let _ = window.set_focus();
                             } else {
-                                let _ = tauri::WebviewWindowBuilder::new(
+                                if let Ok(window) = tauri::WebviewWindowBuilder::new(
                                     app,
                                     "management",
                                     tauri::WebviewUrl::App("/".into())
@@ -92,7 +92,9 @@ fn main() {
                                 .transparent(true)
                                 .decorations(false)
                                 .shadow(true)
-                                .build();
+                                .build() {
+                                    let _ = window.set_content_protected(true);
+                                }
                             }
                         }
                         "restart" => {
@@ -109,6 +111,7 @@ fn main() {
             // Setup Main Window
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_always_on_top(true);
+                let _ = window.set_content_protected(true);
                 
                 #[cfg(debug_assertions)]
                 {
