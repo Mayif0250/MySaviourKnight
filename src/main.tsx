@@ -4,8 +4,12 @@ import App from './App';
 import './styles/globals.css';
 import 'highlight.js/styles/github-dark.css';
 
+import { AppearanceProvider } from './components/AppearanceProvider';
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <AppearanceProvider>
+      <App />
+    </AppearanceProvider>
   </React.StrictMode>
 );

@@ -140,10 +140,10 @@ export const OverlayLayout: React.FC = () => {
       style={{ fontFamily: "'Segoe UI', 'Inter', sans-serif" }}
     >
       <div
-        className="flex flex-col animate-overlay shadow-lg w-full h-full relative"
+        className="flex flex-col animate-overlay shadow-lg w-full h-full relative backdrop-blur-[var(--chat-window-blur)]"
         style={{
-          backgroundColor: 'transparent',
-          border: '1px solid transparent',
+          backgroundColor: 'var(--chat-window-bg)',
+          border: '1px solid var(--chat-window-border)',
           borderRadius: '8px',
           overflow: 'hidden'
         }}
@@ -158,24 +158,24 @@ export const OverlayLayout: React.FC = () => {
               getCurrentWindow().startDragging();
             }
           }}
-          className="flex items-center justify-between cursor-move drag-region"
-          style={{ height: '32px', backgroundColor: '#232323', borderRadius: '8px 8px 0 0' }}
+          className="flex items-center justify-between cursor-move drag-region border-b border-chat-divider/50"
+          style={{ height: '32px', backgroundColor: 'var(--chat-header-bg)', borderRadius: '8px 8px 0 0' }}
         >
           <div className="flex items-center pointer-events-none">
-            <span className="font-semibold text-[15px] text-white ml-[12px]">MSK</span>
-            <span className="text-[13px] italic text-[#bbb] ml-[16px]">Your Personal AI Companion</span>
+            <span className="font-semibold text-[15px] text-chat-textPrimary ml-[12px]">MSK</span>
+            <span className="text-[13px] italic text-chat-textMuted ml-[16px]">Your Personal AI Companion</span>
           </div>
 
           <div className="flex items-center z-10 pr-[8px]">
             <button
-              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
               style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
               title="New Chat"
             >
               {"\uE710"}
             </button>
             <button
-              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
               style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
               title="Chat History"
             >
@@ -183,7 +183,7 @@ export const OverlayLayout: React.FC = () => {
             </button>
             <button
               onClick={openManagementWindow}
-              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
               style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
               title="Settings"
             >
@@ -191,12 +191,11 @@ export const OverlayLayout: React.FC = () => {
             </button>
             <button
               onClick={togglePin}
-              className="w-[24px] h-[24px] flex items-center justify-center text-white transition-colors ml-[4px] mt-[4px]"
+              className={`w-[24px] h-[24px] flex items-center justify-center transition-colors ml-[4px] mt-[4px] ${isPinned ? 'text-blue-500 bg-chat-surfaceHover' : 'text-chat-icon'}`}
               style={{
                 fontFamily: "'Segoe Fluent Icons'",
                 fontSize: '16px',
                 borderRadius: '12px',
-                backgroundColor: isPinned ? '#223D29' : 'transparent',
                 alignSelf: 'flex-start'
               }}
               title={isPinned ? "Unpin window" : "Pin window to top"}
@@ -240,7 +239,7 @@ export const OverlayLayout: React.FC = () => {
                     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
                   }
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#232323] hover:bg-[#2a2a2a] border border-white/10 rounded-full shadow-lg text-white/80 hover:text-white transition-all text-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-chat-buttonBg hover:bg-chat-buttonHover border border-chat-border rounded-full shadow-lg text-chat-textSecondary hover:text-chat-textPrimary transition-all text-xs"
               >
                 <ArrowDown className="w-3.5 h-3.5" />
                 Jump to latest
@@ -249,9 +248,9 @@ export const OverlayLayout: React.FC = () => {
           )}
           {!submittedQuery && !response ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-4 min-h-[100px]">
-              <div className="text-white/40 mb-4 text-2xl">✦</div>
-              <h2 className="text-white/80 font-medium text-[16px] mb-2">How can I help?</h2>
-              <p className="text-white/40 text-[13px] max-w-[250px]">Ask a question, analyze something, or get help with your work.</p>
+              <div className="text-chat-textMuted mb-4 text-2xl">✦</div>
+              <h2 className="text-chat-textPrimary font-medium text-[16px] mb-2">How can I help?</h2>
+              <p className="text-chat-textMuted text-[13px] max-w-[250px]">Ask a question, analyze something, or get help with your work.</p>
             </div>
           ) : (
             <div className="flex flex-col mt-auto pb-4">
@@ -260,9 +259,9 @@ export const OverlayLayout: React.FC = () => {
                   <div
                     className="max-w-[85%] text-[14px] px-[16px] py-[10px] break-words"
                     style={{
-                      backgroundColor: '#232323',
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      color: 'white',
+                      backgroundColor: 'var(--chat-user-bg)',
+                      border: '1px solid var(--chat-border)',
+                      color: 'var(--chat-text-primary)',
                       borderRadius: '16px'
                     }}
                   >
@@ -273,10 +272,10 @@ export const OverlayLayout: React.FC = () => {
               {response && (
                 <div className="flex flex-col justify-start relative group mb-8 w-full px-2">
                   <div className="flex items-center gap-2 mb-2 select-none">
-                    <span className="text-white/60 text-sm">✦</span>
-                    <span className="text-white/80 font-medium text-[13px]">Assistant</span>
+                    <span className="text-chat-textMuted text-sm">✦</span>
+                    <span className="text-chat-textSecondary font-medium text-[13px]">Assistant</span>
                   </div>
-                  <div className="w-full text-[15px] relative break-words text-white/90 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl">
+                  <div className="w-full text-[15px] relative break-words text-chat-textPrimary bg-chat-aiBg backdrop-blur-[var(--chat-ai-blur)] border border-chat-border rounded-2xl p-5 shadow-2xl">
                     <div className="relative">
                       <MarkdownRenderer content={response + (isStreaming ? ' ▌' : '')} />
                     </div>
@@ -287,14 +286,14 @@ export const OverlayLayout: React.FC = () => {
                     <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={handleCopy}
-                        className="flex items-center gap-1.5 p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors text-xs"
+                        className="flex items-center gap-1.5 p-1.5 rounded hover:bg-chat-surfaceHover text-chat-textMuted hover:text-chat-textPrimary transition-colors text-xs"
                         title="Copy response"
                       >
                         {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         {copied ? 'Copied' : 'Copy'}
                       </button>
                       <button
-                        className="flex items-center gap-1.5 p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors text-xs ml-2"
+                        className="flex items-center gap-1.5 p-1.5 rounded hover:bg-chat-surfaceHover text-chat-textMuted hover:text-chat-textPrimary transition-colors text-xs ml-2"
                         title="Regenerate"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
@@ -312,16 +311,15 @@ export const OverlayLayout: React.FC = () => {
         <div className="flex justify-center w-full relative no-drag" style={{ flex: '0 0 auto' }}>
           <form
             onSubmit={handleSubmit}
-            className="flex items-center w-full p-[8px]"
+            className="flex items-center w-full p-[8px] bg-chat-inputSurface border border-chat-border"
             style={{
-              backgroundColor: '#232323',
               borderRadius: '12px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
             }}
           >
             <button
               type="button"
-              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
               style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
               title="Screenshot"
             >
@@ -333,13 +331,13 @@ export const OverlayLayout: React.FC = () => {
               placeholder="Type or hold Ctrl+Space to speak..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[14px] ml-[6px] text-white"
+              className="flex-1 bg-transparent border-none outline-none text-[14px] ml-[6px] text-chat-textPrimary placeholder:text-chat-textMuted"
               style={{ minHeight: '28px', maxHeight: '120px' }}
             />
             <button
               type="submit"
               disabled={!query.trim() || isStreaming}
-              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
               style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
               title="Send"
             >
@@ -347,7 +345,7 @@ export const OverlayLayout: React.FC = () => {
             </button>
             <button
               type="button"
-              className="w-[28px] h-[28px] flex items-center justify-center text-white hover:bg-[#2979FF] transition-colors ml-[4px]"
+              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
               style={{ fontSize: '16px', borderRadius: '14px' }}
               title="Voice reply"
             >

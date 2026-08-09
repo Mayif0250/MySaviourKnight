@@ -10,6 +10,8 @@ import {
   X
 } from 'lucide-react';
 
+import { useAppearanceStore } from '../store/appearanceStore';
+
 type TabId = 'personalization' | 'ai_providers';
 
 interface SettingsOverlayProps {
@@ -18,11 +20,10 @@ interface SettingsOverlayProps {
 
 export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState<TabId>('personalization');
-
-  // Personalization State (Mock)
-  const [opacity, setOpacity] = useState(80);
-  const [blur, setBlur] = useState(12);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const { 
+    overlayStyle, textContrast, opacity, blur, border,
+    setOverlayStyle, setTextContrast, setOpacity, setBlur, setBorder 
+  } = useAppearanceStore();
 
   // AI Providers State (Mock)
   const [provider, setProvider] = useState('ollama');
@@ -43,7 +44,7 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ onClose }) => 
       </div>
 
       {/* Tabs */}
-      <div className="flex p-2 border-b border-white/5 gap-1 bg-[#1a1a1a]">
+      <div className="flex p-2 border-b border-white/5 gap-1 bg-[#1a1a1a]/80 backdrop-blur-md">
         <button
           onClick={() => setActiveTab('personalization')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md transition-colors text-[13px] font-medium ${
@@ -72,64 +73,100 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ onClose }) => 
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'personalization' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
-            {/* Theme Selection */}
+            {/* Overlay Style */}
             <div className="space-y-3">
-              <label className="text-xs font-medium text-white/70 uppercase tracking-wider">Theme</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={() => setTheme('dark')}
-                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border ${theme === 'dark' ? 'border-blue-500 bg-blue-500/5' : 'border-white/10 bg-white/5 hover:border-white/20'} transition-all`}
-                >
-                  <Moon className={`w-5 h-5 ${theme === 'dark' ? 'text-blue-400' : 'text-white/50'}`} />
-                  <span className={`text-[13px] ${theme === 'dark' ? 'text-blue-400 font-medium' : 'text-white/70'}`}>Dark</span>
-                </button>
-                <button 
-                  onClick={() => setTheme('light')}
-                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border ${theme === 'light' ? 'border-blue-500 bg-blue-500/5' : 'border-white/10 bg-white/5 hover:border-white/20'} transition-all`}
-                >
-                  <Sun className={`w-5 h-5 ${theme === 'light' ? 'text-blue-400' : 'text-white/50'}`} />
-                  <span className={`text-[13px] ${theme === 'light' ? 'text-blue-400 font-medium' : 'text-white/70'}`}>Light</span>
-                </button>
+              <label className="text-xs font-medium text-white/70 uppercase tracking-wider">Overlay Style</label>
+              <div className="flex flex-wrap gap-2">
+                {['adaptive', 'transparent', 'glass', 'solid', 'custom'].map((style) => (
+                  <button 
+                    key={style}
+                    onClick={() => setOverlayStyle(style as any)}
+                    className={`px-3 py-1.5 rounded-lg border text-[13px] capitalize transition-all ${
+                      overlayStyle === style 
+                        ? 'border-blue-500 bg-blue-500/10 text-blue-400 font-medium' 
+                        : 'border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:text-white'
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Sliders */}
-            <div className="space-y-5 bg-white/5 border border-white/10 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Layout className="w-4 h-4 text-white/50" />
-                <h3 className="text-sm font-medium text-white/90">Glassmorphism</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/70">Background Opacity</span>
-                    <span className="text-white/40">{opacity}%</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="0" max="100" 
-                    value={opacity}
-                    onChange={(e) => setOpacity(Number(e.target.value))}
-                    className="w-full accent-blue-500 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/70">Blur Intensity</span>
-                    <span className="text-white/40">{blur}px</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="0" max="40" 
-                    value={blur}
-                    onChange={(e) => setBlur(Number(e.target.value))}
-                    className="w-full accent-blue-500 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
+            {/* Text Contrast */}
+            <div className="space-y-3">
+              <label className="text-xs font-medium text-white/70 uppercase tracking-wider">Text Contrast</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'auto', label: 'Auto' },
+                  { id: 'light', label: 'Light' },
+                  { id: 'dark', label: 'Dark' },
+                  { id: 'high', label: 'High Contrast' }
+                ].map((contrast) => (
+                  <button 
+                    key={contrast.id}
+                    onClick={() => setTextContrast(contrast.id as any)}
+                    className={`px-3 py-1.5 rounded-lg border text-[13px] transition-all ${
+                      textContrast === contrast.id 
+                        ? 'border-blue-500 bg-blue-500/10 text-blue-400 font-medium' 
+                        : 'border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:text-white'
+                    }`}
+                  >
+                    {contrast.label}
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* Custom Mode Sliders */}
+            {overlayStyle === 'custom' && (
+              <div className="space-y-5 bg-white/5 border border-white/10 rounded-xl p-4 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Layout className="w-4 h-4 text-white/50" />
+                  <h3 className="text-sm font-medium text-white/90">Custom Appearance</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/70">Background Opacity</span>
+                      <span className="text-white/40">{opacity}%</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" max="100" 
+                      value={opacity}
+                      onChange={(e) => setOpacity(Number(e.target.value))}
+                      className="w-full accent-blue-500 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/70">Blur Intensity</span>
+                      <span className="text-white/40">{blur}px</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" max="30" 
+                      value={blur}
+                      onChange={(e) => setBlur(Number(e.target.value))}
+                      className="w-full accent-blue-500 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-white/70">Border</span>
+                    <button 
+                      onClick={() => setBorder(!border)}
+                      className={`w-10 h-5 rounded-full relative transition-colors ${border ? 'bg-blue-500' : 'bg-white/20'}`}
+                    >
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${border ? 'left-[22px]' : 'left-0.5'}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

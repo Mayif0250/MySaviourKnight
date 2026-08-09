@@ -11,7 +11,7 @@ interface MarkdownRendererProps {
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   return (
-    <div className="prose-custom prose prose-sm prose-invert max-w-full min-w-0 prose-p:leading-relaxed prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0 prose-pre:border-0 overflow-wrap-anywhere break-words">
+    <div className="prose-custom prose prose-sm max-w-full min-w-0 prose-p:leading-relaxed prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0 prose-pre:border-0 overflow-wrap-anywhere break-words text-chat-textPrimary">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
@@ -26,7 +26,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
               );
             }
             return (
-              <code className={`${className || ''} bg-white/10 px-1.5 py-0.5 rounded font-mono text-[13px] break-words`} {...props}>
+              <code className={`${className || ''} bg-chat-codeSurface px-1.5 py-0.5 rounded font-mono text-[13px] break-words text-chat-textPrimary`} {...props}>
                 {children}
               </code>
             );
@@ -36,7 +36,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
           },
           table({ children }) {
             return (
-              <div className="w-full overflow-x-auto my-4 rounded border border-white/10">
+              <div className="w-full overflow-x-auto my-4 rounded border border-chat-border">
                 <table className="w-full text-left min-w-max border-collapse">
                   {children}
                 </table>
@@ -47,7 +47,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
             return (
               <a
                 href={href}
-                className="text-blue-400 hover:underline break-all"
+                className="text-chat-link hover:underline break-all"
                 onClick={async (e) => {
                   e.preventDefault();
                   if (href) {
@@ -68,7 +68,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
               <img
                 src={src}
                 alt={alt}
-                className="max-w-full h-auto rounded-md border border-white/10 my-4"
+                className="max-w-full h-auto rounded-md border border-chat-border my-4"
               />
             );
           }

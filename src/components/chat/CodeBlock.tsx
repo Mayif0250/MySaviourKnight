@@ -30,12 +30,12 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, children }) => {
   };
 
   return (
-    <div className="relative my-4 rounded-md border border-white/10 bg-[#1e1e1e] overflow-hidden flex flex-col w-full min-w-0">
-      <div className="flex items-center justify-between px-4 py-2 bg-black/40 text-xs text-white/70 select-none">
+    <div className="relative my-4 rounded-md border border-chat-border bg-chat-codeSurface overflow-hidden flex flex-col w-full min-w-0">
+      <div className="flex items-center justify-between px-4 py-2 bg-black/20 text-xs text-chat-textSecondary select-none">
         <span className="font-mono lowercase">{language || 'text'}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 hover:text-white transition-colors p-1 -mr-1 rounded hover:bg-white/10"
+          className="flex items-center gap-1.5 hover:text-chat-textPrimary transition-colors p-1 -mr-1 rounded hover:bg-chat-surfaceHover"
           title="Copy code"
         >
           {copied ? (
