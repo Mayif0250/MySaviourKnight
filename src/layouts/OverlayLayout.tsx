@@ -12,7 +12,9 @@ import {
   Plus,
   Clock,
   Camera,
-  Send
+  Send,
+  RefreshCw,
+  ArrowDown
 } from 'lucide-react';
 import { MarkdownRenderer } from '../components/chat/MarkdownRenderer';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
@@ -234,21 +236,40 @@ export const OverlayLayout: React.FC = () => {
             flex: '1 1 auto'
           }}
         >
+          {/* Jump to latest button */}
+          {!autoScroll && response && (
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-50">
+              <button
+                onClick={() => {
+                  setAutoScroll(true);
+                  if (scrollRef.current) {
+                    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#232323] hover:bg-[#2a2a2a] border border-white/10 rounded-full shadow-lg text-white/80 hover:text-white transition-all text-xs"
+              >
+                <ArrowDown className="w-3.5 h-3.5" />
+                Jump to latest
+              </button>
+            </div>
+          )}
           {!submittedQuery && !response ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-4 min-h-[100px]">
-              <span className="text-white/30 text-[15px]">How can I help you today?</span>
+              <div className="text-white/40 mb-4 text-2xl">✦</div>
+              <h2 className="text-white/80 font-medium text-[16px] mb-2">How can I help?</h2>
+              <p className="text-white/40 text-[13px] max-w-[250px]">Ask a question, analyze something, or get help with your work.</p>
             </div>
           ) : (
             <div className="flex flex-col mt-auto pb-4">
               {submittedQuery && (
-                <div className="flex justify-end mb-[8px]">
+                <div className="flex justify-end mb-6 mt-4">
                   <div
-                    className="max-w-[85%] text-[15px] px-[16px] py-[12px] break-words"
+                    className="max-w-[85%] text-[14px] px-[16px] py-[10px] break-words"
                     style={{
-                      backgroundColor: '#2979FF',
+                      backgroundColor: '#232323',
+                      border: '1px solid rgba(255,255,255,0.05)',
                       color: 'white',
-                      borderRadius: '12px',
-                      wordWrap: 'break-word'
+                      borderRadius: '16px'
                     }}
                   >
                     {submittedQuery}
@@ -256,33 +277,37 @@ export const OverlayLayout: React.FC = () => {
                 </div>
               )}
               {response && (
-                <div className="flex justify-start relative group mb-[8px] w-full">
-                  <div
-                    className="max-w-[95%] min-w-0 text-[15px] px-[16px] py-[12px] relative break-words"
-                    style={{
-                      backgroundColor: '#292929',
-                      color: 'white',
-                      borderRadius: '12px'
-                    }}
-                  >
-                    <button
-                      onClick={handleCopy}
-                      title="Copy output"
-                      className="absolute right-2 top-2 p-1.5 rounded bg-white/5 opacity-0 group-hover:opacity-100 hover:bg-white/10 text-white/70 hover:text-white transition-all z-10"
-                    >
-                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
+                <div className="flex flex-col justify-start relative group mb-8 w-full px-2">
+                  <div className="flex items-center gap-2 mb-2 select-none">
+                    <span className="text-white/60 text-sm">✦</span>
+                    <span className="text-white/80 font-medium text-[13px]">Assistant</span>
+                  </div>
+                  <div className="w-full text-[15px] relative break-words text-white/90 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl">
                     <div className="relative">
-                      <MarkdownRenderer content={response} />
-                      {isStreaming && (
-                        <div className="inline-flex gap-1 items-center h-[20px] mt-2">
-                          <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s' }} />
-                          <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s', animationDelay: '0.2s' }} />
-                          <span className="w-2 h-2 bg-white rounded-full animate-pulse opacity-20" style={{ animationDuration: '0.6s', animationDelay: '0.4s' }} />
-                        </div>
-                      )}
+                      <MarkdownRenderer content={response + (isStreaming ? ' ▌' : '')} />
                     </div>
                   </div>
+                  
+                  {/* Action Bar */}
+                  {!isStreaming && (
+                    <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={handleCopy}
+                        className="flex items-center gap-1.5 p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors text-xs"
+                        title="Copy response"
+                      >
+                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copied ? 'Copied' : 'Copy'}
+                      </button>
+                      <button
+                        className="flex items-center gap-1.5 p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors text-xs ml-2"
+                        title="Regenerate"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Regenerate
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

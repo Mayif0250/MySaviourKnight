@@ -74,59 +74,78 @@
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
-/* Markdown styling overrides */
+/* Markdown styling overrides (ChatGPT-style) */
 .prose-custom p {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.65;
+}
+
+.prose-custom h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-custom h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-custom h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1rem;
   margin-bottom: 0.5rem;
-  line-height: 1.625;
 }
 
 .prose-custom ul {
   list-style-type: disc;
-  padding-left: 1.25rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.65;
 }
 
 .prose-custom ol {
   list-style-type: decimal;
-  padding-left: 1.25rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.65;
+}
+
+.prose-custom li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 .prose-custom blockquote {
-  border-left: 3px solid #2563EB;
-  padding-left: 0.875rem;
-  font-style: italic;
-  opacity: 0.9;
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  padding-left: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .prose-custom table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   font-size: 0.9em;
 }
 
 .prose-custom th,
 .prose-custom td {
-  border: 1px solid rgba(156, 163, 175, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.5rem 0.75rem;
 }
 
-.dark .prose-custom th,
-.dark .prose-custom td {
-  border-color: rgba(75, 85, 99, 0.4);
-}
-
 .prose-custom th {
-  background-color: rgba(0, 0, 0, 0.03);
-}
-
-.dark .prose-custom th {
   background-color: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
 }
