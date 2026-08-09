@@ -8,13 +8,13 @@ import {
   Check,
   Paperclip,
   Mic,
-  Pin,
   Plus,
   Clock,
   Camera,
   Send,
   RefreshCw,
-  ArrowDown
+  ArrowDown,
+  Globe
 } from 'lucide-react';
 import { MarkdownRenderer } from '../components/chat/MarkdownRenderer';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
@@ -28,7 +28,6 @@ export const OverlayLayout: React.FC = () => {
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [response, setResponse] = useState('');
   const [copied, setCopied] = useState(false);
-  const [isPinned, setIsPinned] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -50,13 +49,6 @@ export const OverlayLayout: React.FC = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [response, autoScroll]);
-
-  const togglePin = async () => {
-    const appWindow = getCurrentWindow();
-    const newPinnedState = !isPinned;
-    await appWindow.setAlwaysOnTop(newPinnedState);
-    setIsPinned(newPinnedState);
-  };
 
   const openManagementWindow = () => {
     setIsSettingsOpen(true);
@@ -103,10 +95,10 @@ export const OverlayLayout: React.FC = () => {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          
+
           const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split('\n').filter((line) => line.trim() !== '');
-          
+
           for (const line of lines) {
             try {
               const data = JSON.parse(line);
@@ -158,49 +150,29 @@ export const OverlayLayout: React.FC = () => {
               getCurrentWindow().startDragging();
             }
           }}
-          className="flex items-center justify-between cursor-move drag-region border-b border-chat-divider/50"
-          style={{ height: '32px', backgroundColor: 'var(--chat-header-bg)', borderRadius: '8px 8px 0 0' }}
+          className="flex items-center justify-between cursor-move drag-region border-b border-chat-divider/50 px-3"
+          style={{ height: '44px', backgroundColor: 'var(--chat-header-bg)', borderRadius: '8px 8px 0 0' }}
         >
-          <div className="flex items-center pointer-events-none">
-            <span className="font-semibold text-[15px] text-chat-textPrimary ml-[12px]">MSK</span>
-            <span className="text-[13px] italic text-chat-textMuted ml-[16px]">Your Personal AI Companion</span>
+          <div className="flex items-center gap-2.5 pointer-events-none">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-sm">
+              <Shield className="w-4 h-4" />
+            </div>
+            <span className="font-semibold text-[14px] text-chat-textPrimary tracking-wide">MySaviourKnight</span>
           </div>
 
-          <div className="flex items-center z-10 pr-[8px]">
+          <div className="flex items-center gap-1 z-10">
             <button
-              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
-              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
-              title="New Chat"
+              className="w-8 h-8 flex items-center justify-center text-chat-textSecondary hover:text-chat-textPrimary hover:bg-chat-surfaceHover rounded-lg transition-all"
+              title="Browser"
             >
-              {"\uE710"}
-            </button>
-            <button
-              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
-              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
-              title="Chat History"
-            >
-              {"\uE823"}
+              <Globe className="w-4 h-4" />
             </button>
             <button
               onClick={openManagementWindow}
-              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
-              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
+              className="w-8 h-8 flex items-center justify-center text-chat-textSecondary hover:text-chat-textPrimary hover:bg-chat-surfaceHover rounded-lg transition-all"
               title="Settings"
             >
-              {"\uE713"}
-            </button>
-            <button
-              onClick={togglePin}
-              className={`w-[24px] h-[24px] flex items-center justify-center transition-colors ml-[4px] mt-[4px] ${isPinned ? 'text-blue-500 bg-chat-surfaceHover' : 'text-chat-icon'}`}
-              style={{
-                fontFamily: "'Segoe Fluent Icons'",
-                fontSize: '16px',
-                borderRadius: '12px',
-                alignSelf: 'flex-start'
-              }}
-              title={isPinned ? "Unpin window" : "Pin window to top"}
-            >
-              {"\uE718"}
+              <Settings className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -223,10 +195,10 @@ export const OverlayLayout: React.FC = () => {
         >
           {/* Background Watermark */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-50 -z-10">
-            <img 
-              src={watermarkSvg} 
-              alt="watermark" 
-              className="w-[80%] max-w-[300px] object-contain fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-[0_0_20px_rgba(255,255,255,1)] drop-shadow-[0_0_20px_rgba(0,0,0,1)] drop-shadow-[0_0_40px_rgba(255,255,255,0.7)]" 
+            <img
+              src={watermarkSvg}
+              alt="watermark"
+              className="w-[80%] max-w-[300px] object-contain fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-[0_0_20px_rgba(255,255,255,1)] drop-shadow-[0_0_20px_rgba(0,0,0,1)] drop-shadow-[0_0_40px_rgba(255,255,255,0.7)]"
             />
           </div>
           {/* Jump to latest button */}
@@ -247,8 +219,8 @@ export const OverlayLayout: React.FC = () => {
             </div>
           )}
           {!submittedQuery && !response ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 min-h-[100px]">
-              <div className="text-chat-textMuted mb-4 text-2xl">✦</div>
+            <div className="flex-1 flex flex-col items-center justify-end text-center px-4 pb-2 pt-4 min-h-[100px]">
+              <div className="text-chat-textMuted mb-3 text-2xl">✦</div>
               <h2 className="text-chat-textPrimary font-medium text-[16px] mb-2">How can I help?</h2>
               <p className="text-chat-textMuted text-[13px] max-w-[250px]">Ask a question, analyze something, or get help with your work.</p>
             </div>
@@ -280,7 +252,7 @@ export const OverlayLayout: React.FC = () => {
                       <MarkdownRenderer content={response + (isStreaming ? ' ▌' : '')} />
                     </div>
                   </div>
-                  
+
                   {/* Action Bar */}
                   {!isStreaming && (
                     <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -308,50 +280,56 @@ export const OverlayLayout: React.FC = () => {
         </div>
 
         {/* Input Area */}
-        <div className="flex justify-center w-full relative no-drag" style={{ flex: '0 0 auto' }}>
+        <div className="flex flex-col items-center w-full relative no-drag px-3 pb-1" style={{ flex: '0 0 auto' }}>
           <form
             onSubmit={handleSubmit}
-            className="flex items-center w-full p-[8px] bg-chat-inputSurface border border-chat-border"
+            className="flex items-center w-full pr-[6px] pl-4 py-[6px]"
             style={{
-              borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+              backgroundColor: 'rgba(13, 28, 45, 0.6)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(46, 121, 236, 0.3)',
+              borderRadius: '24px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
             }}
           >
             <button
               type="button"
-              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
-              style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
-              title="Screenshot"
+              className="flex items-center justify-center transition-opacity hover:opacity-80 shrink-0"
+              title="Attach"
             >
-              {"\uE114"}
+              <Paperclip className="w-[16px] h-[16px]" style={{ color: '#C6C6CC' }} />
             </button>
             <input
               type="text"
               autoFocus
-              placeholder="Type or hold Ctrl+Space to speak..."
+              placeholder="Type your message..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-[14px] ml-[6px] text-chat-textPrimary placeholder:text-chat-textMuted"
-              style={{ minHeight: '28px', maxHeight: '120px' }}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] mx-3 placeholder:text-[#C6C6CC]/70 text-[#C6C6CC]"
+              style={{ minHeight: '24px' }}
             />
+            <button
+              type="button"
+              className="flex items-center justify-center transition-opacity hover:opacity-80 mr-2 shrink-0"
+              title="Voice input"
+            >
+              <Mic className="w-[16px] h-[16px]" style={{ color: '#C6C6CC' }} />
+            </button>
             <button
               type="submit"
               disabled={!query.trim() || isStreaming}
-              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors disabled:opacity-40 disabled:hover:bg-transparent ml-1 shrink-0"
               style={{ fontFamily: "'Segoe Fluent Icons'", fontSize: '16px', borderRadius: '14px' }}
               title="Send"
             >
               {"\uE122"}
             </button>
-            <button
-              type="button"
-              className="w-[28px] h-[28px] flex items-center justify-center text-chat-icon hover:bg-chat-surfaceHover transition-colors ml-[4px]"
-              style={{ fontSize: '16px', borderRadius: '14px' }}
-              title="Voice reply"
-            >
-              🗣️
-            </button>
           </form>
+
+          <div className="mt-1.5 text-center text-[9px] text-[#C6C6CC]/40 font-mono tracking-wide mb-0.5">
+            MSK AI can make mistakes. Consider verifying important information.
+          </div>
         </div>
 
         {isSettingsOpen && (

@@ -76,12 +76,12 @@ export const AppearanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
 
     const isDarkText = textContrast === 'dark';
-    
+
     // Border colors depend on text contrast to remain visible
-    let borderColor = showBorder 
-      ? (isDarkText ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.1)') 
+    let borderColor = showBorder
+      ? (isDarkText ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.1)')
       : 'transparent';
-      
+
     let dividerColor = isDarkText ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
 
     // Surface colors
@@ -95,7 +95,7 @@ export const AppearanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     let windowBg = surfaceColor;
     let windowBlur = `${surfaceBlur}px`;
     let windowBorder = borderColor;
-    
+
     let headerBg = surfaceColor;
     let aiBg = surfaceColor;
     let aiBlur = '0px';
@@ -117,7 +117,7 @@ export const AppearanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       inputBg = '#232323';
       buttonBg = '#232323';
       buttonHoverBg = '#2a2a2a';
-      
+
       // Force text contrast for old UI aesthetic if it's auto or light
       if (textContrast === 'auto' || textContrast === 'light') {
         textPrimary = 'white';
@@ -132,12 +132,12 @@ export const AppearanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     root.style.setProperty('--chat-window-bg', windowBg);
     root.style.setProperty('--chat-window-border', windowBorder);
     root.style.setProperty('--chat-window-blur', windowBlur);
-    
+
     root.style.setProperty('--chat-header-bg', headerBg);
     root.style.setProperty('--chat-ai-bg', aiBg);
     root.style.setProperty('--chat-ai-blur', aiBlur);
     root.style.setProperty('--chat-user-bg', userBg);
-    
+
     root.style.setProperty('--chat-button-bg', buttonBg);
     root.style.setProperty('--chat-button-hover', buttonHoverBg);
 
