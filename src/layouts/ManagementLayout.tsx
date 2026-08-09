@@ -1,63 +1,43 @@
 import React, { useEffect } from 'react';
-import { Titlebar } from '../shared/components/Titlebar';
-import { Sidebar } from '../features/sidebar/Sidebar';
-import { ChatArea } from '../features/chat/ChatArea';
-import { ContextPanel } from '../features/chat/ContextPanel';
-import { CommandPalette } from '../shared/components/CommandPalette';
-import { SettingsModal } from '../features/settings/SettingsModal';
-import { useSettingsStore } from '../store/settingsStore';
-import { useUIStore } from '../store/uiStore';
-import { useConversationStore } from '../store/conversationStore';
-import { useChatStore } from '../store/chatStore';
-import { Toaster } from 'sonner';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 export const ManagementLayout: React.FC = () => {
-  const { updateSettings, sidebarCollapsed, contextPanelOpen } = useSettingsStore();
-  const { setSettingsModalOpen } = useUIStore();
-  const { createConversation } = useConversationStore();
-  const { setActiveConversationId } = useChatStore();
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        const key = e.key.toLowerCase();
-        if (key === 'b') {
-          e.preventDefault();
-          updateSettings({ sidebarCollapsed: !sidebarCollapsed });
-        } else if (key === 'i') {
-          e.preventDefault();
-          updateSettings({ contextPanelOpen: !contextPanelOpen });
-        } else if (key === 'n') {
-          e.preventDefault();
-          const newConv = createConversation('openai', 'gpt-4o');
-          setActiveConversationId(newConv.id);
-        } else if (key === ',') {
-          e.preventDefault();
-          setSettingsModalOpen(true);
-        }
-      }
       if (e.key === 'Escape') {
-        // Optionally let escape close management window or clear focus
-        // getCurrentWindow().close();
+        const appWindow = getCurrentWindow();
+        appWindow.close();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [sidebarCollapsed, contextPanelOpen, updateSettings, createConversation, setActiveConversationId, setSettingsModalOpen]);
+  }, []);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden font-sans select-none border border-gray-700/50 rounded-xl">
-      <Titlebar />
-      <div className="flex-1 flex overflow-hidden relative">
-        <Sidebar />
-        <ChatArea />
-        <ContextPanel />
+    <div className="h-screen w-screen flex flex-col bg-gray-900 text-gray-100 overflow-hidden font-sans border border-gray-700/50 rounded-xl">
+      <div 
+        data-tauri-drag-region 
+        onMouseDown={(e) => {
+          if (e.button === 0 && (e.target as HTMLElement).tagName !== 'BUTTON') {
+            getCurrentWindow().startDragging();
+          }
+        }}
+        className="h-10 bg-gray-800 flex items-center justify-between px-4"
+      >
+        <span className="font-semibold">MSK Management</span>
+        <button 
+          onClick={() => getCurrentWindow().close()}
+          className="text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-red-500/20"
+        >
+          Close
+        </button>
       </div>
-      <CommandPalette />
-      <SettingsModal />
-      <Toaster position="bottom-right" theme="system" richColors />
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Management Settings</h1>
+          <p className="text-gray-400">Clean slate. Ready for new features.</p>
+        </div>
+      </div>
     </div>
   );
 };
