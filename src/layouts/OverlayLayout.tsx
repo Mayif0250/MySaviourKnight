@@ -201,23 +201,7 @@ export const OverlayLayout: React.FC = () => {
               className="w-[80%] max-w-[300px] object-contain fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-[0_0_20px_rgba(255,255,255,1)] drop-shadow-[0_0_20px_rgba(0,0,0,1)] drop-shadow-[0_0_40px_rgba(255,255,255,0.7)]"
             />
           </div>
-          {/* Jump to latest button */}
-          {!autoScroll && response && (
-            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-50">
-              <button
-                onClick={() => {
-                  setAutoScroll(true);
-                  if (scrollRef.current) {
-                    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-                  }
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-chat-buttonBg hover:bg-chat-buttonHover border border-chat-border rounded-full shadow-lg text-chat-textSecondary hover:text-chat-textPrimary transition-all text-xs"
-              >
-                <ArrowDown className="w-3.5 h-3.5" />
-                Jump to latest
-              </button>
-            </div>
-          )}
+
           {!submittedQuery && !response ? (
             <div className="flex-1 flex flex-col items-center justify-end text-center px-4 pb-2 pt-4 min-h-[100px]">
               <div className="text-chat-textMuted mb-3 text-2xl">✦</div>
@@ -289,7 +273,7 @@ export const OverlayLayout: React.FC = () => {
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
               border: '1px solid rgba(46, 121, 236, 0.3)',
-              borderRadius: '24px',
+              borderRadius: '12px',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
             }}
           >
@@ -327,9 +311,6 @@ export const OverlayLayout: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-1.5 text-center text-[9px] text-[#C6C6CC]/40 font-mono tracking-wide mb-0.5">
-            MSK AI can make mistakes. Consider verifying important information.
-          </div>
         </div>
 
         {isSettingsOpen && (
