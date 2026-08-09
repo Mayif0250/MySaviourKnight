@@ -18,23 +18,14 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { useSettingsStore } from '../store/settingsStore';
-import { useConversationStore } from '../store/conversationStore';
-import { useChatStore } from '../store/chatStore';
-import { aiService } from '../services/ai/AIService';
-import { NotificationService } from '../services/notification/NotificationService';
-import { CodeBlock } from '../features/chat/CodeBlock';
 
 export const OverlayLayout: React.FC = () => {
-  const { activeProvider, activeModel, openaiApiKey, systemPrompt } = useSettingsStore();
-  const { createConversation, addMessageToConversation, updateLastAssistantMessage } = useConversationStore();
-  const { isStreaming, setIsStreaming, resetStreaming } = useChatStore();
-
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [response, setResponse] = useState('');
   const [copied, setCopied] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,11 +85,6 @@ export const OverlayLayout: React.FC = () => {
     e.preventDefault();
     if (!query.trim() || isStreaming) return;
 
-    if (!openaiApiKey && activeProvider === 'openai') {
-      NotificationService.error('OpenAI API Key Required', 'Set key in Management window');
-      return;
-    }
-
     const currentQuery = query.trim();
     setSubmittedQuery(currentQuery);
     setQuery('');
@@ -106,33 +92,49 @@ export const OverlayLayout: React.FC = () => {
     setIsStreaming(true);
 
     try {
-      const conv = createConversation(activeProvider, activeModel, systemPrompt);
-      const userMsg = addMessageToConversation(conv.id, 'user', currentQuery, activeModel);
-      addMessageToConversation(conv.id, 'assistant', '', activeModel);
+      const res = await fetch('http://127.0.0.1:11434/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'qwen2.5-coder:7b',
+          messages: [{ role: 'user', content: currentQuery }],
+          stream: true,
+        }),
+      });
 
+      if (!res.ok) {
+        throw new Error(`Ollama error: ${res.statusText}`);
+      }
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder('utf-8');
       let accumulated = '';
-      await aiService.streamCompletion(
-        [userMsg],
-        activeProvider,
-        activeModel,
-        { apiKey: openaiApiKey },
-        (chunk) => {
-          if (chunk.error) {
-            setResponse(`⚠️ **Error**: ${chunk.error}`);
-            resetStreaming();
-          } else if (chunk.delta) {
-            accumulated += chunk.delta;
-            setResponse(accumulated);
-            updateLastAssistantMessage(conv.id, accumulated);
-          } else if (chunk.done) {
-            resetStreaming();
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter((line) => line.trim() !== '');
+          
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+              if (data.message && data.message.content) {
+                accumulated += data.message.content;
+                setResponse(accumulated);
+              }
+            } catch (err) {
+              console.warn('Error parsing JSON chunk from Ollama', line);
+            }
           }
-        },
-        systemPrompt
-      );
+        }
+      }
+      setIsStreaming(false);
     } catch (err: any) {
-      setResponse(`⚠️ **Error**: ${err.message}`);
-      resetStreaming();
+      setResponse(`⚠️ **Error connecting to Ollama**: ${err.message}. \\n\\nMake sure Ollama is running locally and you have pulled the model with \`ollama run qwen2.5-coder:7b\`. \\n\\nIf you still get this error, you need to restart your Ollama server with CORS enabled. On Windows Command Prompt:\\n\\n\`set OLLAMA_ORIGINS="*" && ollama serve\``);
+      setIsStreaming(false);
     }
   };
 
@@ -271,11 +273,6 @@ export const OverlayLayout: React.FC = () => {
                         remarkPlugins={[remarkGfm]}
                         components={{
                           code({ inline, className, children, ...props }: any) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            const codeString = String(children).replace(/\n$/, '');
-                            if (!inline && (match || codeString.includes('\n'))) {
-                              return <CodeBlock language={match ? match[1] : 'text'} value={codeString} />;
-                            }
                             return <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-[13px]">{children}</code>;
                           }
                         }}
