@@ -26,6 +26,7 @@ export const OverlayLayout: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,10 +41,10 @@ export const OverlayLayout: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (autoScroll && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [response]);
+  }, [response, autoScroll]);
 
   const togglePin = async () => {
     const appWindow = getCurrentWindow();
@@ -90,6 +91,7 @@ export const OverlayLayout: React.FC = () => {
     setQuery('');
     setResponse('');
     setIsStreaming(true);
+    setAutoScroll(true);
 
     try {
       const res = await fetch('http://127.0.0.1:11434/api/chat', {
@@ -151,10 +153,8 @@ export const OverlayLayout: React.FC = () => {
       style={{ fontFamily: "'Segoe UI', 'Inter', sans-serif" }}
     >
       <div
-        className="flex flex-col animate-overlay shadow-lg"
+        className="flex flex-col animate-overlay shadow-lg w-full h-full"
         style={{
-          width: '420px',
-          maxHeight: '100%',
           backgroundColor: 'transparent',
           border: '1px solid transparent',
           borderRadius: '8px',
@@ -222,11 +222,16 @@ export const OverlayLayout: React.FC = () => {
         {/* Conversation Area */}
         <div
           ref={scrollRef}
-          className="overflow-y-auto flex flex-col mb-[4px] scroll-smooth"
+          onScroll={(e) => {
+            const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+            const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+            setAutoScroll(isAtBottom);
+          }}
+          className="overflow-y-auto w-full flex flex-col mb-[4px] scroll-smooth min-h-0 no-drag px-2"
           style={{
             maxHeight: '1000px',
-            maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 100%)',
+            maskImage: 'linear-gradient(to bottom, transparent 0%, black 5%, black 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 5%, black 100%)',
             flex: '1 1 auto'
           }}
         >
@@ -235,11 +240,11 @@ export const OverlayLayout: React.FC = () => {
               <span className="text-white/30 text-[15px]">How can I help you today?</span>
             </div>
           ) : (
-            <div className="flex flex-col mt-auto justify-end min-h-full">
+            <div className="flex flex-col mt-auto pb-4">
               {submittedQuery && (
                 <div className="flex justify-end mb-[8px]">
                   <div
-                    className="max-w-[85%] text-[15px] p-[8px]"
+                    className="max-w-[85%] text-[15px] px-[16px] py-[12px] break-words"
                     style={{
                       backgroundColor: '#2979FF',
                       color: 'white',
@@ -252,9 +257,9 @@ export const OverlayLayout: React.FC = () => {
                 </div>
               )}
               {response && (
-                <div className="flex justify-start relative group mb-[8px]">
+                <div className="flex justify-start relative group mb-[8px] w-full">
                   <div
-                    className="max-w-[95%] text-[15px] p-[8px] relative"
+                    className="max-w-[95%] min-w-0 text-[15px] px-[16px] py-[12px] relative break-words"
                     style={{
                       backgroundColor: '#292929',
                       color: 'white',
@@ -268,7 +273,7 @@ export const OverlayLayout: React.FC = () => {
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
-                    <div className="prose prose-sm prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/10">
+                    <div className="prose prose-sm prose-invert max-w-full min-w-0 prose-p:leading-relaxed prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/10 prose-pre:max-w-full prose-pre:whitespace-pre-wrap overflow-wrap-anywhere break-words">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
@@ -295,10 +300,10 @@ export const OverlayLayout: React.FC = () => {
         </div>
 
         {/* Input Area */}
-        <div className="flex justify-center w-full relative" style={{ flex: '0 0 auto' }}>
+        <div className="flex justify-center w-full relative no-drag" style={{ flex: '0 0 auto' }}>
           <form
             onSubmit={handleSubmit}
-            className="flex items-center w-[420px] p-[8px]"
+            className="flex items-center w-full p-[8px]"
             style={{
               backgroundColor: '#232323',
               borderRadius: '12px',
