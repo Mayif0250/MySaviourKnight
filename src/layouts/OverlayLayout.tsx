@@ -19,6 +19,9 @@ import {
 import { MarkdownRenderer } from '../components/chat/MarkdownRenderer';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { SettingsOverlay } from '../components/SettingsOverlay';
+// @ts-ignore
+import watermarkSvg from '../assets/picsvg_modified.svg';
 
 export const OverlayLayout: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -28,6 +31,7 @@ export const OverlayLayout: React.FC = () => {
   const [isPinned, setIsPinned] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,26 +58,8 @@ export const OverlayLayout: React.FC = () => {
     setIsPinned(newPinnedState);
   };
 
-  const openManagementWindow = async () => {
-    try {
-      const win = new WebviewWindow('management', {
-        url: '/',
-        title: 'MSK Management',
-        width: 1280,
-        height: 830,
-        minWidth: 800,
-        minHeight: 600,
-        center: true,
-        decorations: false,
-        transparent: true,
-        shadow: true
-      });
-      win.once('tauri://error', function (e) {
-        WebviewWindow.getByLabel('management').then(w => w?.setFocus());
-      });
-    } catch (e) {
-      console.warn('Error opening management window:', e);
-    }
+  const openManagementWindow = () => {
+    setIsSettingsOpen(true);
   };
 
   const handleCopy = () => {
@@ -154,7 +140,7 @@ export const OverlayLayout: React.FC = () => {
       style={{ fontFamily: "'Segoe UI', 'Inter', sans-serif" }}
     >
       <div
-        className="flex flex-col animate-overlay shadow-lg w-full h-full"
+        className="flex flex-col animate-overlay shadow-lg w-full h-full relative"
         style={{
           backgroundColor: 'transparent',
           border: '1px solid transparent',
@@ -228,7 +214,7 @@ export const OverlayLayout: React.FC = () => {
             const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
             setAutoScroll(isAtBottom);
           }}
-          className="overflow-y-auto w-full flex flex-col mb-[4px] scroll-smooth min-h-0 no-drag px-2"
+          className="overflow-y-auto w-full flex flex-col mb-[4px] scroll-smooth min-h-0 no-drag px-2 relative z-10"
           style={{
             maxHeight: '1000px',
             maskImage: 'linear-gradient(to bottom, transparent 0%, black 5%, black 100%)',
@@ -236,6 +222,14 @@ export const OverlayLayout: React.FC = () => {
             flex: '1 1 auto'
           }}
         >
+          {/* Background Watermark */}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-50 -z-10">
+            <img 
+              src={watermarkSvg} 
+              alt="watermark" 
+              className="w-[80%] max-w-[300px] object-contain fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-[0_0_20px_rgba(255,255,255,1)] drop-shadow-[0_0_20px_rgba(0,0,0,1)] drop-shadow-[0_0_40px_rgba(255,255,255,0.7)]" 
+            />
+          </div>
           {/* Jump to latest button */}
           {!autoScroll && response && (
             <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-50">
@@ -362,6 +356,9 @@ export const OverlayLayout: React.FC = () => {
           </form>
         </div>
 
+        {isSettingsOpen && (
+          <SettingsOverlay onClose={() => setIsSettingsOpen(false)} />
+        )}
       </div>
     </div>
   );
