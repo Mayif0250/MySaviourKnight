@@ -19,6 +19,8 @@ import {
 import { MarkdownRenderer } from '../components/chat/MarkdownRenderer';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { invoke } from '@tauri-apps/api/core';
+
 import { SettingsOverlay } from '../components/SettingsOverlay';
 // @ts-ignore
 import watermarkSvg from '../assets/picsvg_modified.svg';
@@ -31,6 +33,7 @@ export const OverlayLayout: React.FC = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,11 +64,10 @@ export const OverlayLayout: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim() || isStreaming) return;
+  const executeQuery = async (queryText: string) => {
+    if (!queryText.trim() || isStreaming) return;
 
-    const currentQuery = query.trim();
+    const currentQuery = queryText.trim();
     setSubmittedQuery(currentQuery);
     setQuery('');
     setResponse('');
@@ -74,6 +76,7 @@ export const OverlayLayout: React.FC = () => {
 
     try {
       const res = await fetch('http://127.0.0.1:11434/api/chat', {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -114,10 +117,38 @@ export const OverlayLayout: React.FC = () => {
       }
       setIsStreaming(false);
     } catch (err: any) {
-      setResponse(`⚠️ **Error connecting to Ollama**: ${err.message}. \\n\\nMake sure Ollama is running locally and you have pulled the model with \`ollama run qwen2.5-coder:7b\`. \\n\\nIf you still get this error, you need to restart your Ollama server with CORS enabled. On Windows Command Prompt:\\n\\n\`set OLLAMA_ORIGINS="*" && ollama serve\``);
+      setResponse(`⚠️ **Error connecting to Ollama**: ${err.message}. \n\nMake sure Ollama is running locally and you have pulled the model with \`ollama run qwen2.5-coder:7b\`. \n\nIf you still get this error, you need to restart your Ollama server with CORS enabled. On Windows Command Prompt:\n\n\`set OLLAMA_ORIGINS="*" && ollama serve\``);
       setIsStreaming(false);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await executeQuery(query);
+  };
+
+  const toggleRecording = async () => {
+    if (isRecordingAudio) {
+      setIsRecordingAudio(false);
+      try {
+        const transcript = await invoke<string>('stop_system_recording');
+        if (transcript && transcript.trim()) {
+          setQuery(transcript.trim());
+          await executeQuery(transcript.trim());
+        }
+      } catch (err) {
+        console.error("Failed to stop recording:", err);
+      }
+    } else {
+      try {
+        await invoke('start_system_recording');
+        setIsRecordingAudio(true);
+      } catch (err) {
+        console.error("Failed to start recording:", err);
+      }
+    }
+  };
+
 
   return (
     <div
@@ -295,10 +326,11 @@ export const OverlayLayout: React.FC = () => {
             />
             <button
               type="button"
-              className="flex items-center justify-center transition-opacity hover:opacity-80 mr-2 shrink-0"
-              title="Voice input"
+              onClick={toggleRecording}
+              className={`flex items-center justify-center transition-all hover:opacity-80 mr-2 shrink-0 ${isRecordingAudio ? 'animate-pulse' : ''}`}
+              title={isRecordingAudio ? "Stop listening to system audio" : "Listen to system audio"}
             >
-              <Mic className="w-[16px] h-[16px]" style={{ color: '#C6C6CC' }} />
+              <Mic className="w-[16px] h-[16px]" style={{ color: isRecordingAudio ? '#EF4444' : '#C6C6CC' }} />
             </button>
             <button
               type="submit"

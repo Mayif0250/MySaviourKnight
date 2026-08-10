@@ -7,6 +7,25 @@ use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use tauri_plugin_notification::NotificationExt;
 
+mod audio;
+mod stt;
+
+#[tauri::command]
+fn start_system_recording() -> Result<(), String> {
+    audio::start_loopback_recording()
+}
+
+#[tauri::command]
+async fn stop_system_recording() -> Result<String, String> {
+    let (raw_audio, sample_rate, channels) = audio::stop_loopback_recording()?;
+    
+    // Run Whisper inference in a blocking task to avoid blocking the Tauri async runtime
+    tokio::task::spawn_blocking(move || {
+        stt::transcribe_audio(raw_audio, sample_rate, channels)
+    }).await.map_err(|e| e.to_string())?
+}
+
+
 fn main() {
     let toggle_shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space);
 
@@ -34,6 +53,15 @@ fn main() {
                 .build(),
         )
         .setup(move |app| {
+            // Initialize STT Model downloading in the background
+            let app_data_dir = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+            std::fs::create_dir_all(&app_data_dir).ok();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = stt::initialize_whisper(app_data_dir).await {
+                    eprintln!("Failed to initialize Whisper STT: {}", e);
+                }
+            });
+
             // Register the shortcut globally with error handling fallback
             if let Err(e) = app.global_shortcut().register(toggle_shortcut) {
                 eprintln!("Failed to register global shortcut: {}", e);
@@ -122,6 +150,10 @@ fn main() {
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            start_system_recording,
+            stop_system_recording
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
