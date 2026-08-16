@@ -26,6 +26,63 @@ async fn stop_system_recording() -> Result<String, String> {
 }
 
 
+#[cfg(target_os = "windows")]
+#[tauri::command]
+fn test_bring_to_front(window: tauri::Window) -> Result<(), String> {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, SetForegroundWindow, HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW
+    };
+
+    let hwnd = window.hwnd().map_err(|e| e.to_string())?;
+    let hwnd = HWND(hwnd.0 as _);
+
+    unsafe {
+        let _ = SetWindowPos(
+            hwnd,
+            HWND_TOPMOST,
+            0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW,
+        );
+        let _ = SetForegroundWindow(hwnd);
+    }
+    Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+fn test_bring_to_front(_window: tauri::Window) -> Result<(), String> {
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+#[tauri::command]
+fn test_remove_topmost(window: tauri::Window) -> Result<(), String> {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, HWND_NOTOPMOST, SWP_NOMOVE, SWP_NOSIZE
+    };
+
+    let hwnd = window.hwnd().map_err(|e| e.to_string())?;
+    let hwnd = HWND(hwnd.0 as _);
+
+    unsafe {
+        let _ = SetWindowPos(
+            hwnd,
+            HWND_NOTOPMOST,
+            0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE,
+        );
+    }
+    Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+fn test_remove_topmost(_window: tauri::Window) -> Result<(), String> {
+    Ok(())
+}
+
 fn main() {
     let toggle_shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space);
 
@@ -152,7 +209,9 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             start_system_recording,
-            stop_system_recording
+            stop_system_recording,
+            test_bring_to_front,
+            test_remove_topmost
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

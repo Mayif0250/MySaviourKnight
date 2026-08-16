@@ -34,6 +34,7 @@ export const OverlayLayout: React.FC = () => {
   const [autoScroll, setAutoScroll] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [testStatus, setTestStatus] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -206,6 +207,39 @@ export const OverlayLayout: React.FC = () => {
               <Settings className="w-4 h-4" />
             </button>
           </div>
+        </div>
+
+        {/* Temporary Experiment Controls */}
+        <div className="flex flex-col items-center py-2 border-b border-chat-divider/50 bg-black/20 z-20">
+          <div className="flex gap-2">
+            <button 
+              onClick={async () => {
+                try {
+                  await invoke('test_bring_to_front');
+                  setTestStatus('Bring to front: Success');
+                } catch (e: any) {
+                  setTestStatus(`Bring to front error: ${e.toString()}`);
+                }
+              }}
+              className="px-2 py-1 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 text-xs rounded border border-blue-500/30"
+            >
+              Bring Tauri To Front
+            </button>
+            <button 
+              onClick={async () => {
+                try {
+                  await invoke('test_remove_topmost');
+                  setTestStatus('Remove topmost: Success');
+                } catch (e: any) {
+                  setTestStatus(`Remove topmost error: ${e.toString()}`);
+                }
+              }}
+              className="px-2 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-300 text-xs rounded border border-red-500/30"
+            >
+              Remove Topmost
+            </button>
+          </div>
+          {testStatus && <div className="text-[10px] text-gray-400 mt-1">{testStatus}</div>}
         </div>
 
         {/* Conversation Area */}
